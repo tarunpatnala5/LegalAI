@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+# *.db  <-- removed so legal_ai.db is tracked by git
+*.sqlite3
+backend/.env
+
+# Node
+node_modules/
+.next/
+dist/
+build/
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Project specific
+uploaded_files/
