@@ -3,7 +3,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 venv/
-# *.db  <-- removed so legal_ai.db is tracked by git
+# *.db  <-- removed so legalai.db is tracked by git
 *.sqlite3
 backend/.env
 

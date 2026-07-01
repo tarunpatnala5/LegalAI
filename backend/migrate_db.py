@@ -5,7 +5,7 @@ Safe to run multiple times (checks if columns exist before adding).
 import sqlite3
 import os
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "..", "legal_ai.db")
+DB_PATH = os.path.join(os.path.dirname(__file__), "..", "legalai.db")
 DB_PATH = os.path.abspath(DB_PATH)
 
 print(f"Migrating: {DB_PATH}")

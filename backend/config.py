@@ -3,7 +3,7 @@ from typing import Optional
 from urllib.parse import quote_plus
 
 class Settings(BaseSettings):
-    DATABASE_URL: Optional[str] = "sqlite:///./legal_ai.db"
+    DATABASE_URL: Optional[str] = "sqlite:///./legalai.db"
     SECRET_KEY: str = "your-super-secret-key-change-in-production"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 525600  # 1 year

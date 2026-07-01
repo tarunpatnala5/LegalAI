@@ -35,7 +35,7 @@ cd LegalAI
     ```
 
 3.  **Initialize Database (If needed)**
-    If `legal_ai.db` does not exist or needs to be reset:
+    If `legalai.db` does not exist or needs to be reset:
     ```bash
     python backend/init_db.py
     ```

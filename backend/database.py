@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 from config import settings
 
 # Use SQLite for development if no DB URL is provided
-SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL or "sqlite:///./legal_ai.db"
+SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL or "sqlite:///./legalai.db"
 
 # Check if using SQLite to add specific connect args
 print(f"DEBUG: SQLALCHEMY_DATABASE_URL = '{SQLALCHEMY_DATABASE_URL}'")
