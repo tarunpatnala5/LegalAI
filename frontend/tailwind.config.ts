@@ -14,7 +14,8 @@ const config: Config = {
                 foreground: "var(--foreground)",
             },
             fontFamily: {
-                sans: ["var(--font-sf-pro)", "ui-sans-serif", "system-ui", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
+                sans: ["var(--font-sf-text)", "ui-sans-serif", "system-ui", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
+                display: ["var(--font-sf-display)", "ui-sans-serif", "system-ui", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
             },
         },
     },
