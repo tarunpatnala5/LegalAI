@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     
     # External APIs
     TOGETHER_API_KEY: Optional[str] = None
+    GEMINI_API_KEY: Optional[str] = None
+    GROQ_API_KEY: Optional[str] = None
     GOOGLE_TRANSLATE_API_KEY: Optional[str] = None
     HUGGINGFACE_API_KEY: Optional[str] = None
     
