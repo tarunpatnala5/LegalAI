@@ -7,6 +7,8 @@ import api from "@/lib/api";
 import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
+import { motion, AnimatePresence } from "framer-motion";
+import { fadeInUp, scaleIn, backdropFade, staggerContainer, staggerItem } from "@/lib/motion";
 
 interface ScheduleEvent {
     id: number;
@@ -77,13 +79,11 @@ export default function SchedulePage() {
         let filtered = [...events];
 
         if (filterType === 'custom' && selectedDate) {
-            // Filter by specific selected date
             filtered = events.filter(event => {
                 const eventDate = new Date(event.court_date);
                 return eventDate.toDateString() === selectedDate.toDateString();
             });
         } else if (filterType === 'month') {
-            // Filter by current month view
             filtered = events.filter(event => {
                 const eventDate = new Date(event.court_date);
                 return eventDate.getMonth() === currentMonth.getMonth() &&
@@ -107,31 +107,33 @@ export default function SchedulePage() {
 
         if (upcoming.length > 0) {
             toast.custom((t) => (
-                <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-white dark:bg-slate-800 shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}>
-                    <div className="flex-1 w-0 p-4">
-                        <div className="flex items-start">
-                            <div className="flex-shrink-0 pt-0.5">
-                                <Bell className="h-10 w-10 text-amber-500 animate-pulse" />
-                            </div>
-                            <div className="ml-3 flex-1">
-                                <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                    Upcoming Deadlines
-                                </p>
-                                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                    You have {upcoming.length} active reminders for the next week.
-                                </p>
-                            </div>
-                            <div className="ml-4 flex-shrink-0 flex">
-                                <button
-                                    className="bg-white dark:bg-slate-800 rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                    onClick={() => toast.dismiss(t.id)}
-                                >
-                                    <span className="sr-only">Close</span>
-                                    <X size={18} />
-                                </button>
-                            </div>
-                        </div>
+                <div
+                    className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full pointer-events-auto flex items-start gap-3 p-4`}
+                    style={{
+                        background: "var(--card)",
+                        border: "1px solid var(--card-border)",
+                        borderRadius: "var(--radius-lg)",
+                        boxShadow: "var(--shadow-lg)",
+                    }}
+                >
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: "rgba(255,149,0,0.08)" }}>
+                        <Bell size={18} style={{ color: "#ff9500" }} strokeWidth={1.5} />
                     </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-[14px] font-semibold" style={{ color: "var(--foreground)" }}>
+                            Upcoming Deadlines
+                        </p>
+                        <p className="text-[13px] mt-0.5" style={{ color: "var(--muted-foreground)" }}>
+                            You have {upcoming.length} active reminders for the next week.
+                        </p>
+                    </div>
+                    <button
+                        className="p-1 rounded-md transition-colors duration-150 shrink-0"
+                        style={{ color: "var(--muted-foreground)" }}
+                        onClick={() => toast.dismiss(t.id)}
+                    >
+                        <X size={16} strokeWidth={1.5} />
+                    </button>
                 </div>
             ), { duration: 5000 });
         }
@@ -144,7 +146,6 @@ export default function SchedulePage() {
         }
 
         try {
-            // Build datetime from local date + time parts to avoid UTC offset issues
             const [year, month, day] = newEvent.court_date.split('-').map(Number);
             const [hours, minutes] = newEvent.time.split(':').map(Number);
             const datetime = new Date(year, month - 1, day, hours, minutes, 0);
@@ -239,13 +240,21 @@ export default function SchedulePage() {
         setFilterType('custom');
     };
 
-    const getStatusColor = (status: string) => {
+    const getStatusStyle = (status: string) => {
         switch (status) {
-            case 'In Progress': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
-            case 'Closed': return 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400';
+            case 'In Progress': return { background: "rgba(0,113,227,0.08)", color: "var(--accent)" };
+            case 'Closed': return { background: "var(--muted)", color: "var(--muted-foreground)" };
             case 'Scheduled':
             default:
-                return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
+                return { background: "rgba(255,149,0,0.08)", color: "#ff9500" };
+        }
+    };
+
+    const getStatusBarColor = (status: string) => {
+        switch (status) {
+            case 'In Progress': return "var(--accent)";
+            case 'Closed': return "var(--muted-foreground)";
+            default: return "#ff9500";
         }
     };
 
@@ -273,12 +282,10 @@ export default function SchedulePage() {
         const days = [];
         const today = new Date();
 
-        // Empty cells for days before the month starts
         for (let i = 0; i < startingDayOfWeek; i++) {
-            days.push(<div key={`empty-${i}`} className="h-8 sm:h-10 lg:h-12"></div>);
+            days.push(<div key={`empty-${i}`} className="h-10" />);
         }
 
-        // Days of the month
         for (let day = 1; day <= daysInMonth; day++) {
             const date = new Date(year, month, day);
             const isToday = date.toDateString() === today.toDateString();
@@ -289,19 +296,21 @@ export default function SchedulePage() {
                 <button
                     key={day}
                     onClick={() => handleDateSelect(date)}
-                    className={cn(
-                        "h-8 sm:h-10 lg:h-12 rounded-lg flex items-center justify-center text-xs sm:text-sm lg:text-base font-semibold transition-all relative",
-                        isSelected && "bg-blue-600 text-white shadow-lg",
-                        !isSelected && isToday && "bg-blue-100 text-blue-600 dark:bg-blue-900/30",
-                        !isSelected && !isToday && "hover:bg-slate-100 dark:hover:bg-slate-800",
-                    )}
+                    className="h-10 flex items-center justify-center text-[13px] font-medium transition-all duration-200 relative"
+                    style={{
+                        borderRadius: "var(--radius-md)",
+                        background: isSelected ? "var(--accent)" : isToday ? "rgba(0,113,227,0.06)" : "transparent",
+                        color: isSelected ? "white" : isToday ? "var(--accent)" : "var(--foreground)",
+                    }}
+                    onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = "var(--muted)"; }}
+                    onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = isToday ? "rgba(0,113,227,0.06)" : "transparent"; }}
                 >
                     {day}
                     {hasEvents && (
-                        <span className={cn(
-                            "absolute bottom-0.5 sm:bottom-1 lg:bottom-1.5 w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full",
-                            isSelected ? "bg-white" : "bg-blue-600 dark:bg-blue-400"
-                        )}></span>
+                        <span
+                            className="absolute bottom-1 w-1 h-1 rounded-full"
+                            style={{ background: isSelected ? "white" : "var(--accent)" }}
+                        />
                     )}
                 </button>
             );
@@ -322,482 +331,618 @@ export default function SchedulePage() {
         });
     };
 
+    /* ── Shared input styles for modals ────────────────────── */
+    const inputStyle = {
+        background: "var(--muted)",
+        borderRadius: "var(--radius-md)",
+        border: "1px solid transparent",
+        color: "var(--foreground)",
+    };
+    const handleFocus = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
+        e.currentTarget.style.borderColor = "var(--accent)";
+        e.currentTarget.style.background = "var(--card)";
+    };
+    const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
+        e.currentTarget.style.borderColor = "transparent";
+        e.currentTarget.style.background = "var(--muted)";
+    };
+
+    /* ── Reusable Apple toggle ─────────────────────────────── */
+    const AppleToggle = ({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) => (
+        <button
+            type="button"
+            onClick={() => onChange(!checked)}
+            className="relative w-[51px] h-[31px] rounded-full transition-colors duration-300 p-0.5"
+            style={{ background: checked ? "var(--accent)" : "var(--muted)" }}
+            role="switch"
+            aria-checked={checked}
+        >
+            <div
+                className="w-[27px] h-[27px] bg-white rounded-full transition-transform duration-300"
+                style={{
+                    transform: checked ? "translateX(20px)" : "translateX(0px)",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+                }}
+            />
+        </button>
+    );
+
+    /* ── Reusable modal form ───────────────────────────────── */
+    const EventForm = ({
+        title,
+        form,
+        setForm,
+        onSubmit,
+        onClose,
+        submitLabel,
+    }: {
+        title: string;
+        form: typeof newEvent;
+        setForm: (f: typeof newEvent) => void;
+        onSubmit: () => void;
+        onClose: () => void;
+        submitLabel: string;
+    }) => (
+        <>
+            <motion.div
+                variants={backdropFade}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className="fixed inset-0 z-50"
+                style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(8px)" }}
+                onClick={onClose}
+            />
+            <motion.div
+                variants={scaleIn}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                onClick={(e) => e.target === e.currentTarget && onClose()}
+            >
+                <div
+                    className="w-full max-w-md p-7 max-h-[90vh] overflow-y-auto"
+                    style={{
+                        background: "var(--card)",
+                        border: "1px solid var(--card-border)",
+                        borderRadius: "var(--radius-xl)",
+                        boxShadow: "var(--shadow-xl)",
+                    }}
+                >
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="font-display text-[20px] font-semibold" style={{ color: "var(--foreground)" }}>
+                            {title}
+                        </h3>
+                        <button onClick={onClose} className="p-1 rounded-md" style={{ color: "var(--muted-foreground)" }}>
+                            <X size={18} strokeWidth={1.5} />
+                        </button>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-[12px] font-medium mb-1.5" style={{ color: "var(--muted-foreground)" }}>Event Title</label>
+                            <input
+                                type="text"
+                                value={form.case_name}
+                                onChange={e => setForm({ ...form, case_name: e.target.value })}
+                                className="w-full px-4 py-3 text-[14px] outline-none transition-all duration-200"
+                                style={inputStyle}
+                                onFocus={handleFocus}
+                                onBlur={handleBlur}
+                                placeholder="e.g. Hearing vs State"
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-[12px] font-medium mb-1.5" style={{ color: "var(--muted-foreground)" }}>Date</label>
+                                <input
+                                    type="date"
+                                    value={form.court_date}
+                                    onChange={e => setForm({ ...form, court_date: e.target.value })}
+                                    className="w-full px-3 py-3 text-[14px] outline-none transition-all duration-200"
+                                    style={inputStyle}
+                                    onFocus={handleFocus}
+                                    onBlur={handleBlur}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[12px] font-medium mb-1.5" style={{ color: "var(--muted-foreground)" }}>Time</label>
+                                <input
+                                    type="time"
+                                    value={form.time}
+                                    onChange={e => setForm({ ...form, time: e.target.value })}
+                                    className="w-full px-3 py-3 text-[14px] outline-none transition-all duration-200"
+                                    style={inputStyle}
+                                    onFocus={handleFocus}
+                                    onBlur={handleBlur}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 items-end">
+                            <div>
+                                <label className="block text-[12px] font-medium mb-1.5" style={{ color: "var(--muted-foreground)" }}>Status</label>
+                                <div className="relative">
+                                    <select
+                                        value={form.status}
+                                        onChange={e => setForm({ ...form, status: e.target.value })}
+                                        className="w-full px-3 py-3 text-[14px] outline-none transition-all duration-200 appearance-none cursor-pointer pr-8"
+                                        style={inputStyle}
+                                        onFocus={handleFocus}
+                                        onBlur={handleBlur}
+                                    >
+                                        <option value="Scheduled">Scheduled</option>
+                                        <option value="In Progress">In Progress</option>
+                                        <option value="Closed">Closed</option>
+                                    </select>
+                                    <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--muted-foreground)" }} />
+                                </div>
+                            </div>
+                            <div className="flex items-center justify-between pb-1">
+                                <span className="text-[13px] font-medium" style={{ color: "var(--foreground)" }}>Notify Me</span>
+                                <AppleToggle
+                                    checked={form.notification_enabled}
+                                    onChange={(v) => setForm({ ...form, notification_enabled: v })}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex gap-3 mt-7">
+                        <button
+                            onClick={onClose}
+                            className="flex-1 py-3 text-[14px] font-medium transition-colors duration-150"
+                            style={{
+                                color: "var(--foreground)",
+                                background: "var(--muted)",
+                                borderRadius: "var(--radius-md)",
+                            }}
+                        >
+                            Cancel
+                        </button>
+                        <motion.button
+                            whileHover={{ scale: 1.01 }}
+                            whileTap={{ scale: 0.99 }}
+                            onClick={onSubmit}
+                            className="flex-1 py-3 text-[14px] font-semibold text-white transition-colors duration-200"
+                            style={{
+                                background: "var(--accent)",
+                                borderRadius: "var(--radius-md)",
+                            }}
+                        >
+                            {submitLabel}
+                        </motion.button>
+                    </div>
+                </div>
+            </motion.div>
+        </>
+    );
+
     if (loading) {
         return (
-            <div className="h-screen flex items-center justify-center">
-                <Loader2 className="animate-spin text-blue-600" size={48} />
+            <div className="flex items-center justify-center h-64">
+                <div className="w-6 h-6 rounded-full animate-spin" style={{ border: "2px solid var(--accent)", borderTopColor: "transparent" }} />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen p-3 sm:p-6 lg:p-8">
-            <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6 lg:mb-8">
-                    <div>
-                        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-white mb-1 sm:mb-2">
-                            Schedule & Calendar
-                        </h1>
-                        <p className="text-xs sm:text-sm lg:text-base text-slate-500 dark:text-slate-400">
-                            Manage court dates and important deadlines
-                        </p>
-                    </div>
-                    <button
-                        onClick={() => {
-                            if (!isLoggedIn) {
-                                toast.error("Please login to add events");
-                                router.push("/auth/login?returnTo=/schedule");
-                                return;
-                            }
-                            const now = new Date();
-                            const hh = String(now.getHours()).padStart(2, '0');
-                            const mm = String(now.getMinutes()).padStart(2, '0');
-                            const preDate = selectedDate
-                                ? `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`
-                                : '';
-                            setNewEvent(prev => ({ ...prev, time: `${hh}:${mm}`, court_date: preDate }));
-                            setShowModal(true);
+        <motion.div
+            variants={fadeInUp}
+            initial="hidden"
+            animate="visible"
+            className="max-w-6xl mx-auto"
+        >
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+                <div>
+                    <h1 className="font-display text-[28px] sm:text-[34px] font-semibold" style={{ color: "var(--foreground)" }}>
+                        Schedule & Calendar
+                    </h1>
+                    <p className="text-[15px] mt-1" style={{ color: "var(--muted-foreground)" }}>
+                        Manage court dates and important deadlines
+                    </p>
+                </div>
+                <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                        if (!isLoggedIn) {
+                            toast.error("Please login to add events");
+                            router.push("/auth/login?returnTo=/schedule");
+                            return;
+                        }
+                        const now = new Date();
+                        const hh = String(now.getHours()).padStart(2, '0');
+                        const mm = String(now.getMinutes()).padStart(2, '0');
+                        const preDate = selectedDate
+                            ? `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`
+                            : '';
+                        setNewEvent(prev => ({ ...prev, time: `${hh}:${mm}`, court_date: preDate }));
+                        setShowModal(true);
+                    }}
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 text-[14px] font-medium text-white transition-colors duration-200"
+                    style={{
+                        background: "var(--accent)",
+                        borderRadius: "var(--radius-full)",
+                    }}
+                >
+                    <Plus size={16} strokeWidth={2} />
+                    Add Event
+                </motion.button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                {/* Calendar Section */}
+                <div className="lg:col-span-2">
+                    <div
+                        className="p-6"
+                        style={{
+                            background: "var(--card)",
+                            border: "1px solid var(--card-border)",
+                            borderRadius: "var(--radius-xl)",
+                            boxShadow: "var(--shadow-sm)",
                         }}
-                        className="w-full sm:w-auto flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-medium shadow-lg shadow-blue-600/30 transition-all hover:shadow-xl hover:shadow-blue-600/40 text-sm sm:text-base"
                     >
-                        <Plus size={18} className="sm:w-5 sm:h-5" />
-                        Add Event
-                    </button>
+                        <div className="mb-5">
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="font-semibold text-[17px]" style={{ color: "var(--foreground)" }}>Calendar</h2>
+                                <button
+                                    onClick={() => {
+                                        const today = new Date();
+                                        setCurrentMonth(today);
+                                        setSelectedDate(today);
+                                        setFilterType('custom');
+                                    }}
+                                    className="px-3 py-1 text-[11px] font-medium transition-opacity duration-150 hover:opacity-70"
+                                    style={{
+                                        background: "rgba(0,113,227,0.06)",
+                                        color: "var(--accent)",
+                                        borderRadius: "var(--radius-full)",
+                                    }}
+                                >
+                                    Today
+                                </button>
+                            </div>
+
+                            {/* Month/Year controls + arrows */}
+                            <div className="flex items-end gap-2 mb-4">
+                                <div className="flex-1 min-w-[110px]">
+                                    <label className="block text-[11px] font-medium mb-1" style={{ color: "var(--muted-foreground)" }}>Month</label>
+                                    <select
+                                        value={currentMonth.getMonth()}
+                                        onChange={(e) => {
+                                            const newDate = new Date(currentMonth);
+                                            newDate.setMonth(parseInt(e.target.value));
+                                            setCurrentMonth(newDate);
+                                        }}
+                                        className="w-full px-3 py-2.5 text-[13px] outline-none transition-all duration-200 appearance-none cursor-pointer"
+                                        style={inputStyle}
+                                        onFocus={handleFocus}
+                                        onBlur={handleBlur}
+                                    >
+                                        {['January', 'February', 'March', 'April', 'May', 'June',
+                                            'July', 'August', 'September', 'October', 'November', 'December'].map((month, idx) => (
+                                                <option key={month} value={idx}>{month}</option>
+                                            ))}
+                                    </select>
+                                </div>
+                                <div className="flex-1 min-w-[80px]">
+                                    <label className="block text-[11px] font-medium mb-1" style={{ color: "var(--muted-foreground)" }}>Year</label>
+                                    <select
+                                        value={currentMonth.getFullYear()}
+                                        onChange={(e) => {
+                                            const newDate = new Date(currentMonth);
+                                            newDate.setFullYear(parseInt(e.target.value));
+                                            setCurrentMonth(newDate);
+                                        }}
+                                        className="w-full px-3 py-2.5 text-[13px] outline-none transition-all duration-200 appearance-none cursor-pointer"
+                                        style={inputStyle}
+                                        onFocus={handleFocus}
+                                        onBlur={handleBlur}
+                                    >
+                                        {Array.from({ length: 101 }, (_, i) => 2000 + i).map(year => (
+                                            <option key={year} value={year}>{year}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="flex gap-0.5">
+                                    <button
+                                        onClick={() => navigateMonth('prev')}
+                                        className="w-10 h-10 flex items-center justify-center rounded-lg transition-colors duration-150"
+                                        style={{ color: "var(--muted-foreground)" }}
+                                        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--muted)"; }}
+                                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                                        title="Previous Month"
+                                    >
+                                        <ChevronLeft size={18} strokeWidth={1.5} />
+                                    </button>
+                                    <button
+                                        onClick={() => navigateMonth('next')}
+                                        className="w-10 h-10 flex items-center justify-center rounded-lg transition-colors duration-150"
+                                        style={{ color: "var(--muted-foreground)" }}
+                                        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--muted)"; }}
+                                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                                        title="Next Month"
+                                    >
+                                        <ChevronRight size={18} strokeWidth={1.5} />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Calendar Grid */}
+                        <div className="space-y-2">
+                            {/* Weekday Headers */}
+                            <div className="grid grid-cols-7 gap-0.5 mb-1">
+                                {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
+                                    <div key={day} className="h-8 flex items-center justify-center text-[11px] font-medium" style={{ color: "var(--muted-foreground)" }}>
+                                        {day}
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Calendar Days */}
+                            <div className="grid grid-cols-7 gap-0.5">
+                                {renderCalendar()}
+                            </div>
+                        </div>
+
+                        {/* Legend */}
+                        <div className="mt-5 pt-4 flex items-center gap-2 text-[12px]" style={{ borderTop: "1px solid var(--separator)", color: "var(--muted-foreground)" }}>
+                            <div className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--accent)" }} />
+                            <span>Has Events</span>
+                        </div>
+                    </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6 lg:gap-8">
-                    {/* Calendar Section */}
-                    <div className="lg:col-span-2">
-                        <div className="bg-white dark:bg-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl border border-slate-200 dark:border-slate-800">
-                            <div className="mb-4 sm:mb-6">
-                                <div className="flex items-center justify-between mb-3 sm:mb-4">
-                                    <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">Calendar</h2>
-                                    <button
-                                        onClick={() => {
-                                            const today = new Date();
-                                            setCurrentMonth(today);
-                                            setSelectedDate(today);
-                                            setFilterType('custom');
-                                        }}
-                                        className="px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 rounded-lg transition-colors"
-                                    >
-                                        Current Date
-                                    </button>
-                                </div>
-
-                                {/* Month and Year Selection with Navigation Arrows */}
-                                <div className="flex items-end gap-1 sm:gap-2 mb-3 sm:mb-4">
-                                    <div className="flex-1 min-w-[100px] sm:min-w-[130px]">
-                                        <label className="block text-[10px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Month</label>
-                                        <select
-                                            value={currentMonth.getMonth()}
-                                            onChange={(e) => {
-                                                const newDate = new Date(currentMonth);
-                                                newDate.setMonth(parseInt(e.target.value));
-                                                setCurrentMonth(newDate);
-                                            }}
-                                            className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer"
-                                        >
-                                            {['January', 'February', 'March', 'April', 'May', 'June',
-                                                'July', 'August', 'September', 'October', 'November', 'December'].map((month, idx) => (
-                                                    <option key={month} value={idx}>{month}</option>
-                                                ))}
-                                        </select>
-                                    </div>
-                                    <div className="flex-1 min-w-[70px] sm:min-w-[90px]">
-                                        <label className="block text-[10px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Year</label>
-                                        <select
-                                            value={currentMonth.getFullYear()}
-                                            onChange={(e) => {
-                                                const newDate = new Date(currentMonth);
-                                                newDate.setFullYear(parseInt(e.target.value));
-                                                setCurrentMonth(newDate);
-                                            }}
-                                            className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer"
-                                        >
-                                            {Array.from({ length: 101 }, (_, i) => 2000 + i).map(year => (
-                                                <option key={year} value={year}>{year}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-
-                                    {/* Navigation Arrows */}
-                                    <div className="flex gap-0.5 sm:gap-1">
-                                        <button
-                                            onClick={() => navigateMonth('prev')}
-                                            className="h-[38px] w-[38px] sm:h-[42px] sm:w-[42px] flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"
-                                            title="Previous Month"
-                                        >
-                                            <ChevronLeft size={18} className="sm:w-5 sm:h-5" />
-                                        </button>
-                                        <button
-                                            onClick={() => navigateMonth('next')}
-                                            className="h-[38px] w-[38px] sm:h-[42px] sm:w-[42px] flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"
-                                            title="Next Month"
-                                        >
-                                            <ChevronRight size={18} className="sm:w-5 sm:h-5" />
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Calendar Grid */}
-                            <div className="space-y-2">
-                                {/* Weekday Headers */}
-                                <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-2">
-                                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                                        <div key={day} className="h-8 sm:h-10 lg:h-12 flex items-center justify-center text-[10px] sm:text-xs lg:text-sm font-bold text-slate-500 dark:text-slate-400">
-                                            {day}
-                                        </div>
-                                    ))}
-                                </div>
-
-                                {/* Calendar Days */}
-                                <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
-                                    {renderCalendar()}
-                                </div>
-                            </div>
-
-                            {/* Legend */}
-                            <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-slate-200 dark:border-slate-800">
-                                <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
-                                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-blue-600"></div>
-                                    <span>Has Events</span>
-                                </div>
-                            </div>
+                {/* Events List */}
+                <div className="lg:col-span-3">
+                    <div
+                        className="p-6"
+                        style={{
+                            background: "var(--card)",
+                            border: "1px solid var(--card-border)",
+                            borderRadius: "var(--radius-xl)",
+                            boxShadow: "var(--shadow-sm)",
+                        }}
+                    >
+                        {/* Header with filter reset */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-5">
+                            <h2 className="font-semibold text-[17px]" style={{ color: "var(--foreground)" }}>
+                                {filterType === 'all' ? 'All Events' :
+                                    filterType === 'custom' && selectedDate ?
+                                        selectedDate.toLocaleDateString('en-IN', { month: 'long', day: 'numeric', year: 'numeric' }) :
+                                        filterType === 'month' ?
+                                            currentMonth.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }) : 'Events'}
+                            </h2>
+                            {(filterType !== 'all' || selectedDate) && (
+                                <button
+                                    onClick={() => {
+                                        setFilterType('all');
+                                        setSelectedDate(null);
+                                    }}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium transition-colors duration-150"
+                                    style={{
+                                        color: "var(--accent)",
+                                        background: "rgba(0,113,227,0.06)",
+                                        borderRadius: "var(--radius-full)",
+                                    }}
+                                >
+                                    <CalendarIcon size={12} strokeWidth={1.5} />
+                                    Show All Events
+                                </button>
+                            )}
                         </div>
-                    </div>
 
-                    {/* Events List */}
-                    <div className="lg:col-span-3">
-                        <div className="bg-white dark:bg-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 shadow-xl border border-slate-200 dark:border-slate-800">
-                            {/* Header with All Events Button */}
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
-                                <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-                                    {filterType === 'all' ? 'All Events' :
-                                        filterType === 'custom' && selectedDate ?
-                                            selectedDate.toLocaleDateString('en-IN', { month: 'long', day: 'numeric', year: 'numeric' }) :
-                                            filterType === 'month' ?
-                                                currentMonth.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }) : 'Events'}
-                                </h2>
-                                {(filterType !== 'all' || selectedDate) && (
+                        {/* Events Display */}
+                        <motion.div
+                            variants={staggerContainer}
+                            initial="hidden"
+                            animate="visible"
+                            className="space-y-2"
+                        >
+                            {!isLoggedIn && (
+                                <div className="text-center py-12">
+                                    <LogIn size={32} className="mx-auto mb-3" style={{ color: "var(--muted-foreground)", opacity: 0.4 }} />
+                                    <p className="text-[14px] mb-4" style={{ color: "var(--muted-foreground)" }}>
+                                        Login to see your scheduled events
+                                    </p>
                                     <button
-                                        onClick={() => {
-                                            setFilterType('all');
-                                            setSelectedDate(null);
-                                        }}
-                                        className="w-full sm:w-auto flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-xs sm:text-sm font-medium"
+                                        onClick={() => router.push("/auth/login?returnTo=/schedule")}
+                                        className="flex items-center gap-2 mx-auto px-5 py-2.5 text-[13px] font-medium text-white transition-colors duration-200"
+                                        style={{ background: "var(--accent)", borderRadius: "var(--radius-full)" }}
                                     >
-                                        <CalendarIcon size={14} className="sm:w-4 sm:h-4" />
-                                        Show All Events
+                                        <LogIn size={14} />
+                                        Login
                                     </button>
-                                )}
-                            </div>
-
-                            {/* Events Display */}
-                            <div className="space-y-3 sm:space-y-4">
-                                {!isLoggedIn && (
-                                    <div className="text-center py-8 sm:py-12">
-                                        <LogIn size={40} className="sm:w-12 sm:h-12 mx-auto text-slate-300 dark:text-slate-600 mb-3 sm:mb-4" />
-                                        <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 italic mb-4">
-                                            Login to see your scheduled events
-                                        </p>
-                                        <button
-                                            onClick={() => router.push("/auth/login?returnTo=/schedule")}
-                                            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition"
-                                        >
-                                            <LogIn size={16} />
-                                            Login
-                                        </button>
-                                    </div>
-                                )}
-                                {isLoggedIn && filteredEvents.length === 0 && (
-                                    <div className="text-center py-8 sm:py-12">
-                                        <CalendarIcon size={40} className="sm:w-12 sm:h-12 mx-auto text-slate-300 dark:text-slate-700 mb-3 sm:mb-4" />
-                                        <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 italic">
-                                            {filterType === 'custom' && selectedDate
-                                                ? `No events scheduled for ${selectedDate.toLocaleDateString('en-IN')}`
-                                                : filterType === 'month'
-                                                    ? 'No events this month'
-                                                    : 'No upcoming events'}
-                                        </p>
-                                    </div>
-                                )}
-                                {filteredEvents.map((event) => {
-                                    const date = toUtcDate(event.court_date);
-                                    return (
+                                </div>
+                            )}
+                            {isLoggedIn && filteredEvents.length === 0 && (
+                                <div className="text-center py-12">
+                                    <CalendarIcon size={32} className="mx-auto mb-3" style={{ color: "var(--muted-foreground)", opacity: 0.3 }} />
+                                    <p className="text-[14px]" style={{ color: "var(--muted-foreground)" }}>
+                                        {filterType === 'custom' && selectedDate
+                                            ? `No events scheduled for ${selectedDate.toLocaleDateString('en-IN')}`
+                                            : filterType === 'month'
+                                                ? 'No events this month'
+                                                : 'No upcoming events'}
+                                    </p>
+                                </div>
+                            )}
+                            {filteredEvents.map((event) => {
+                                const date = toUtcDate(event.court_date);
+                                return (
+                                    <motion.div
+                                        key={event.id}
+                                        variants={staggerItem}
+                                        className="relative p-4 pl-6 overflow-hidden group transition-all duration-200"
+                                        style={{
+                                            background: "var(--card)",
+                                            border: "1px solid var(--card-border)",
+                                            borderRadius: "var(--radius-lg)",
+                                            boxShadow: "var(--shadow-sm)",
+                                        }}
+                                        onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "var(--shadow-md)"; }}
+                                        onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "var(--shadow-sm)"; }}
+                                    >
+                                        {/* Left status bar */}
                                         <div
-                                            key={event.id}
-                                            className="bg-white dark:bg-slate-800 p-3 sm:p-4 lg:p-5 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col gap-2 sm:gap-3 relative overflow-hidden group shadow-sm hover:shadow-md transition"
-                                        >
-                                            <div className={cn("absolute left-0 top-0 w-1 sm:w-1.5 h-full rounded-l-full",
-                                                event.status === 'Closed' ? "bg-slate-400" :
-                                                    event.status === 'In Progress' ? "bg-blue-500" : "bg-amber-500"
-                                            )}></div>
+                                            className="absolute left-0 top-0 w-[3px] h-full"
+                                            style={{
+                                                background: getStatusBarColor(event.status),
+                                                borderRadius: "var(--radius-lg) 0 0 var(--radius-lg)",
+                                            }}
+                                        />
 
-                                            <div className="flex justify-between items-start pl-1 sm:pl-2">
-                                                <h3 className="font-bold text-slate-800 dark:text-white ml-1 sm:ml-2 text-base sm:text-lg line-clamp-1 flex-1">{event.case_name}</h3>
-                                                <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-                                                    <span className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-[9px] sm:text-[10px] font-bold uppercase tracking-wider ${getStatusColor(event.status)}`}>
-                                                        {event.status}
-                                                    </span>
-                                                    {event.notification_enabled ?
-                                                        <Bell size={14} className="sm:w-4 sm:h-4 text-amber-500" /> :
-                                                        <BellOff size={14} className="sm:w-4 sm:h-4 text-slate-300" />
-                                                    }
-                                                    <button
-                                                        onClick={() => handleOpenEdit(event)}
-                                                        className="text-slate-400 hover:text-blue-500 transition-colors p-0.5 sm:p-1"
-                                                        title="Edit Event"
-                                                    >
-                                                        <Pencil size={14} className="sm:w-4 sm:h-4" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setConfirmDeleteId(event.id)}
-                                                        className="ml-0.5 text-slate-400 hover:text-red-500 transition-colors p-0.5 sm:p-1"
-                                                        title="Delete Event"
-                                                    >
-                                                        <Trash2 size={14} className="sm:w-4 sm:h-4" />
-                                                    </button>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex items-center gap-3 sm:gap-4 text-[10px] sm:text-xs text-slate-500 ml-2 sm:ml-4 font-medium">
-                                                <span className="flex items-center gap-1 sm:gap-1.5"><CalendarIcon size={12} className="sm:w-3.5 sm:h-3.5" /> {date.toLocaleDateString('en-IN')}</span>
-                                                <span className="flex items-center gap-1 sm:gap-1.5"><Clock size={12} className="sm:w-3.5 sm:h-3.5" /> {date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
+                                        <div className="flex justify-between items-start gap-3">
+                                            <h3 className="font-semibold text-[15px] line-clamp-1 flex-1" style={{ color: "var(--foreground)" }}>
+                                                {event.case_name}
+                                            </h3>
+                                            <div className="flex items-center gap-1.5 shrink-0">
+                                                <span
+                                                    className="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider"
+                                                    style={{
+                                                        ...getStatusStyle(event.status),
+                                                        borderRadius: "var(--radius-full)",
+                                                    }}
+                                                >
+                                                    {event.status}
+                                                </span>
+                                                {event.notification_enabled ?
+                                                    <Bell size={13} strokeWidth={1.5} style={{ color: "#ff9500" }} /> :
+                                                    <BellOff size={13} strokeWidth={1.5} style={{ color: "var(--muted-foreground)" }} />
+                                                }
+                                                <button
+                                                    onClick={() => handleOpenEdit(event)}
+                                                    className="p-1.5 rounded-md transition-colors duration-150"
+                                                    style={{ color: "var(--muted-foreground)" }}
+                                                    title="Edit Event"
+                                                    onMouseEnter={(e) => { e.currentTarget.style.color = "var(--accent)"; e.currentTarget.style.background = "rgba(0,113,227,0.06)"; }}
+                                                    onMouseLeave={(e) => { e.currentTarget.style.color = "var(--muted-foreground)"; e.currentTarget.style.background = "transparent"; }}
+                                                >
+                                                    <Pencil size={13} strokeWidth={1.5} />
+                                                </button>
+                                                <button
+                                                    onClick={() => setConfirmDeleteId(event.id)}
+                                                    className="p-1.5 rounded-md transition-colors duration-150"
+                                                    style={{ color: "var(--muted-foreground)" }}
+                                                    title="Delete Event"
+                                                    onMouseEnter={(e) => { e.currentTarget.style.color = "var(--destructive)"; e.currentTarget.style.background = "rgba(255,59,48,0.06)"; }}
+                                                    onMouseLeave={(e) => { e.currentTarget.style.color = "var(--muted-foreground)"; e.currentTarget.style.background = "transparent"; }}
+                                                >
+                                                    <Trash2 size={13} strokeWidth={1.5} />
+                                                </button>
                                             </div>
                                         </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
+
+                                        <div className="flex items-center gap-3 mt-2 text-[12px]" style={{ color: "var(--muted-foreground)" }}>
+                                            <span className="flex items-center gap-1">
+                                                <CalendarIcon size={12} strokeWidth={1.5} /> {date.toLocaleDateString('en-IN')}
+                                            </span>
+                                            <span className="flex items-center gap-1">
+                                                <Clock size={12} strokeWidth={1.5} /> {date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                            </span>
+                                        </div>
+                                    </motion.div>
+                                );
+                            })}
+                        </motion.div>
                     </div>
                 </div>
             </div>
 
             {/* Delete Confirmation Modal */}
-            {confirmDeleteId !== null && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-                    <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-slate-200 dark:border-slate-700">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-500/20 flex items-center justify-center shrink-0">
-                                <Trash2 size={18} className="text-red-600 dark:text-red-400" />
+            <AnimatePresence>
+                {confirmDeleteId !== null && (
+                    <>
+                        <motion.div
+                            variants={backdropFade}
+                            initial="hidden"
+                            animate="visible"
+                            exit="exit"
+                            className="fixed inset-0 z-50"
+                            style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(8px)" }}
+                            onClick={() => setConfirmDeleteId(null)}
+                        />
+                        <motion.div
+                            variants={scaleIn}
+                            initial="hidden"
+                            animate="visible"
+                            exit="exit"
+                            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                            onClick={(e) => e.target === e.currentTarget && setConfirmDeleteId(null)}
+                        >
+                            <div
+                                className="w-full max-w-sm p-6"
+                                style={{
+                                    background: "var(--card)",
+                                    border: "1px solid var(--card-border)",
+                                    borderRadius: "var(--radius-xl)",
+                                    boxShadow: "var(--shadow-xl)",
+                                }}
+                            >
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "rgba(255,59,48,0.08)" }}>
+                                        <Trash2 size={18} style={{ color: "var(--destructive)" }} />
+                                    </div>
+                                    <h2 className="text-[17px] font-semibold" style={{ color: "var(--foreground)" }}>Delete Event?</h2>
+                                </div>
+                                <p className="text-[14px] mb-6" style={{ color: "var(--muted-foreground)" }}>
+                                    Are you sure you want to delete <strong style={{ color: "var(--foreground)" }}>{events.find(e => e.id === confirmDeleteId)?.case_name}</strong>? This action cannot be undone.
+                                </p>
+                                <div className="flex gap-2 justify-end">
+                                    <button
+                                        onClick={() => setConfirmDeleteId(null)}
+                                        className="px-4 py-2 text-[13px] font-medium transition-colors duration-150"
+                                        style={{ color: "var(--foreground)", background: "var(--muted)", borderRadius: "var(--radius-md)" }}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={() => handleDeleteEvent(confirmDeleteId)}
+                                        className="px-4 py-2 text-[13px] font-medium text-white flex items-center gap-2 transition-colors duration-150"
+                                        style={{ background: "var(--destructive)", borderRadius: "var(--radius-md)" }}
+                                    >
+                                        <Trash2 size={13} /> Delete
+                                    </button>
+                                </div>
                             </div>
-                            <h2 className="text-lg font-bold text-slate-800 dark:text-white">Delete Event?</h2>
-                        </div>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-                            Are you sure you want to delete <strong className="text-slate-800 dark:text-slate-200">{events.find(e => e.id === confirmDeleteId)?.case_name}</strong>? This action cannot be undone.
-                        </p>
-                        <div className="flex gap-3 justify-end">
-                            <button
-                                onClick={() => setConfirmDeleteId(null)}
-                                className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={() => handleDeleteEvent(confirmDeleteId)}
-                                className="px-4 py-2 text-sm font-medium bg-red-600 hover:bg-red-700 text-white rounded-xl transition flex items-center gap-2"
-                            >
-                                <Trash2 size={14} />
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
 
             {/* Add Event Modal */}
-            {showModal && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
-                    <div className="bg-white dark:bg-slate-800 rounded-2xl sm:rounded-3xl w-full max-w-md p-6 sm:p-8 shadow-2xl scale-100 transform transition-all max-h-[90vh] overflow-y-auto">
-                        <div className="flex justify-between items-center mb-4 sm:mb-6">
-                            <h3 className="text-xl sm:text-2xl font-bold">Add New Event</h3>
-                            <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600">
-                                <X size={20} className="sm:w-6 sm:h-6" />
-                            </button>
-                        </div>
+            <AnimatePresence>
+                {showModal && (
+                    <EventForm
+                        title="Add New Event"
+                        form={newEvent}
+                        setForm={setNewEvent}
+                        onSubmit={handleAddEvent}
+                        onClose={() => setShowModal(false)}
+                        submitLabel="Schedule Event"
+                    />
+                )}
+            </AnimatePresence>
 
-                        <div className="space-y-3 sm:space-y-4">
-                            <div>
-                                <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Event Title</label>
-                                <input
-                                    type="text"
-                                    value={newEvent.case_name}
-                                    onChange={e => setNewEvent({ ...newEvent, case_name: e.target.value })}
-                                    className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                    placeholder="e.g. Hearing vs State"
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                                <div>
-                                    <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Date</label>
-                                    <input
-                                        type="date"
-                                        value={newEvent.court_date}
-                                        onChange={e => setNewEvent({ ...newEvent, court_date: e.target.value })}
-                                        className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Time</label>
-                                    <input
-                                        type="time"
-                                        value={newEvent.time}
-                                        onChange={e => setNewEvent({ ...newEvent, time: e.target.value })}
-                                        className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                                <div>
-                                    <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Status</label>
-                                    <div className="relative">
-                                        <select
-                                            value={newEvent.status}
-                                            onChange={e => setNewEvent({ ...newEvent, status: e.target.value })}
-                                            className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none appearance-none pr-8"
-                                        >
-                                            <option value="Scheduled">Scheduled</option>
-                                            <option value="In Progress">In Progress</option>
-                                            <option value="Closed">Closed</option>
-                                        </select>
-                                        <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                                    </div>
-                                </div>
-                                <div className="flex items-end pb-2 sm:pb-3">
-                                    <label className="flex items-center gap-2 sm:gap-3 cursor-pointer group">
-                                        <div className="relative">
-                                            <input
-                                                type="checkbox"
-                                                className="sr-only peer"
-                                                checked={newEvent.notification_enabled}
-                                                onChange={e => setNewEvent({ ...newEvent, notification_enabled: e.target.checked })}
-                                            />
-                                            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-[18px] after:w-[18px] after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                                        </div>
-                                        <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-blue-600 transition">
-                                            Notify Me
-                                        </span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex gap-3 mt-6 sm:mt-8">
-                            <button
-                                onClick={() => setShowModal(false)}
-                                className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 py-2.5 sm:py-3 rounded-xl font-medium transition text-sm sm:text-base"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleAddEvent}
-                                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 sm:py-3 rounded-xl font-medium transition shadow-lg shadow-blue-600/20 text-sm sm:text-base"
-                            >
-                                Schedule Event
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {showEditModal && editingEvent && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
-                    <div className="bg-white dark:bg-slate-800 rounded-2xl sm:rounded-3xl w-full max-w-md p-6 sm:p-8 shadow-2xl transform transition-all max-h-[90vh] overflow-y-auto">
-                        <div className="flex justify-between items-center mb-4 sm:mb-6">
-                            <h3 className="text-xl sm:text-2xl font-bold">Edit Event</h3>
-                            <button onClick={() => { setShowEditModal(false); setEditingEvent(null); }} className="text-slate-400 hover:text-slate-600">
-                                <X size={20} className="sm:w-6 sm:h-6" />
-                            </button>
-                        </div>
-
-                        <div className="space-y-3 sm:space-y-4">
-                            <div>
-                                <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Event Title</label>
-                                <input
-                                    type="text"
-                                    value={editForm.case_name}
-                                    onChange={e => setEditForm({ ...editForm, case_name: e.target.value })}
-                                    className="w-full bg-slate-50 dark:bg-slate-900 border-none rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                    placeholder="e.g. Hearing vs State"
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                                <div>
-                                    <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Date</label>
-                                    <input
-                                        type="date"
-                                        value={editForm.court_date}
-                                        onChange={e => setEditForm({ ...editForm, court_date: e.target.value })}
-                                        className="w-full bg-slate-50 dark:bg-slate-900 border-none rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Time</label>
-                                    <input
-                                        type="time"
-                                        value={editForm.time}
-                                        onChange={e => setEditForm({ ...editForm, time: e.target.value })}
-                                        className="w-full bg-slate-50 dark:bg-slate-900 border-none rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                                <div>
-                                    <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Status</label>
-                                    <div className="relative">
-                                        <select
-                                            value={editForm.status}
-                                            onChange={e => setEditForm({ ...editForm, status: e.target.value })}
-                                            className="w-full bg-slate-50 dark:bg-slate-900 border-none rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none appearance-none pr-8"
-                                        >
-                                            <option value="Scheduled">Scheduled</option>
-                                            <option value="In Progress">In Progress</option>
-                                            <option value="Closed">Closed</option>
-                                        </select>
-                                        <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                                    </div>
-                                </div>
-                                <div className="flex items-end pb-2 sm:pb-3">
-                                    <label className="flex items-center gap-2 sm:gap-3 cursor-pointer group">
-                                        <div className="relative">
-                                            <input
-                                                type="checkbox"
-                                                className="sr-only peer"
-                                                checked={editForm.notification_enabled}
-                                                onChange={e => setEditForm({ ...editForm, notification_enabled: e.target.checked })}
-                                            />
-                                            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-[18px] after:w-[18px] after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                                        </div>
-                                        <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-blue-600 transition">Notify Me</span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex gap-3 mt-6 sm:mt-8">
-                            <button
-                                onClick={() => { setShowEditModal(false); setEditingEvent(null); }}
-                                className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 py-2.5 sm:py-3 rounded-xl font-medium transition text-sm sm:text-base"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleUpdateEvent}
-                                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 sm:py-3 rounded-xl font-medium transition shadow-lg shadow-blue-600/20 text-sm sm:text-base"
-                            >
-                                Save Changes
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
+            {/* Edit Event Modal */}
+            <AnimatePresence>
+                {showEditModal && editingEvent && (
+                    <EventForm
+                        title="Edit Event"
+                        form={editForm}
+                        setForm={setEditForm}
+                        onSubmit={handleUpdateEvent}
+                        onClose={() => { setShowEditModal(false); setEditingEvent(null); }}
+                        submitLabel="Save Changes"
+                    />
+                )}
+            </AnimatePresence>
+        </motion.div>
     );
 }
