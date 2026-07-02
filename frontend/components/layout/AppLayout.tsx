@@ -1,8 +1,9 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import SideNavbar from "@/components/layout/SideNavbar";
-import TopNavbar from "@/components/layout/TopNavbar";
+import FloatingNavbar from "@/components/layout/FloatingNavbar";
+import { motion, AnimatePresence } from "framer-motion";
+import { pageTransition } from "@/lib/motion";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -10,17 +11,33 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     const isAuthPage = pathname?.startsWith("/auth");
 
     if (isAuthPage) {
-        return <div className="min-h-screen bg-slate-50 dark:bg-slate-950">{children}</div>;
+        return (
+            <div className="min-h-screen" style={{ background: "var(--background)" }}>
+                {children}
+            </div>
+        );
     }
 
     return (
-        <div className="flex bg-background min-h-screen text-foreground transition-colors duration-300">
-            <SideNavbar />
-            <main className="flex-1 flex flex-col h-screen overflow-hidden w-full lg:w-auto">
-                <TopNavbar />
-                <div className="flex-1 overflow-auto p-4 sm:p-6 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700">
-                    {children}
-                </div>
+        <div
+            className="min-h-screen"
+            style={{ background: "var(--background)", color: "var(--foreground)" }}
+        >
+            <FloatingNavbar />
+
+            {/* Main content — generous spacing, centered */}
+            <main className="w-full max-w-screen-xl mx-auto px-5 sm:px-8 lg:px-16 pt-20 lg:pt-28 pb-28 lg:pb-16">
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={pathname}
+                        variants={pageTransition}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                    >
+                        {children}
+                    </motion.div>
+                </AnimatePresence>
             </main>
         </div>
     );

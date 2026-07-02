@@ -5,6 +5,20 @@
    ============================================================ */
 @font-face {
   font-family: "SF Pro Display";
+  src: url("/fonts/SF-Pro-Display-Ultralight.otf") format("opentype");
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "SF Pro Display";
+  src: url("/fonts/SF-Pro-Display-Thin.otf") format("opentype");
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "SF Pro Display";
   src: url("/fonts/SF-Pro-Display-Light.otf") format("opentype");
   font-weight: 300;
   font-style: normal;
@@ -35,20 +49,6 @@
   font-family: "SF Pro Display";
   src: url("/fonts/SF-Pro-Display-Bold.otf") format("opentype");
   font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "SF Pro Display";
-  src: url("/fonts/SF-Pro-Display-Heavy.otf") format("opentype");
-  font-weight: 800;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "SF Pro Display";
-  src: url("/fonts/SF-Pro-Display-Black.otf") format("opentype");
-  font-weight: 900;
   font-style: normal;
   font-display: swap;
 }
@@ -91,42 +91,101 @@
   font-style: normal;
   font-display: swap;
 }
-@font-face {
-  font-family: "SF Pro Text";
-  src: url("/fonts/SF-Pro-Text-Heavy.otf") format("opentype");
-  font-weight: 800;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "SF Pro Text";
-  src: url("/fonts/SF-Pro-Text-Black.otf") format("opentype");
-  font-weight: 900;
-  font-style: normal;
-  font-display: swap;
-}
 
 /* ============================================================
-   Design Tokens
+   Design Tokens — Apple HIG Palette
    ============================================================ */
 :root {
-  --background: #f8fafc;
+  /* Colors */
+  --background: #ffffff;
   --foreground: #1d1d1f;
   --card: #ffffff;
-  --card-border: #e2e8f0;
-  --muted: #f1f5f9;
-  --muted-foreground: #6e6e73;
+  --card-border: rgba(0, 0, 0, 0.06);
+  --muted: #f5f5f7;
+  --muted-foreground: #86868b;
+  --accent: #0071e3;
+  --accent-hover: #0077ed;
+  --accent-foreground: #ffffff;
+  --destructive: #ff3b30;
+  --destructive-hover: #ff453a;
+  --surface-glass: rgba(255, 255, 255, 0.72);
+  --surface-glass-border: rgba(0, 0, 0, 0.08);
+  --surface-glass-elevated: rgba(255, 255, 255, 0.85);
+  --separator: rgba(0, 0, 0, 0.06);
+
+  /* Font stacks */
   --font-sf-display: "SF Pro Display", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   --font-sf-text: "SF Pro Text", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Spacing (8px grid) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+
+  /* Corner radii */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+
+  /* Shadows — extremely soft, layered */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.1), 0 4px 16px rgba(0, 0, 0, 0.06);
+  --shadow-glass: 0 4px 24px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .dark {
-  --background: #0f172a;
+  --background: #000000;
   --foreground: #f5f5f7;
-  --card: #1e293b;
-  --card-border: #334155;
-  --muted: #1e293b;
-  --muted-foreground: #94a3b8;
+  --card: #1c1c1e;
+  --card-border: rgba(255, 255, 255, 0.08);
+  --muted: #2c2c2e;
+  --muted-foreground: #98989d;
+  --accent: #2997ff;
+  --accent-hover: #40a9ff;
+  --accent-foreground: #ffffff;
+  --destructive: #ff453a;
+  --destructive-hover: #ff6961;
+  --surface-glass: rgba(28, 28, 30, 0.72);
+  --surface-glass-border: rgba(255, 255, 255, 0.1);
+  --surface-glass-elevated: rgba(44, 44, 46, 0.85);
+  --separator: rgba(255, 255, 255, 0.08);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-glass: 0 4px 24px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* ============================================================
+   Global Italic Ban — Apple never uses italic in UI
+   ============================================================ */
+*, *::before, *::after {
+  font-style: normal !important;
+}
+em, i {
+  font-style: normal !important;
+}
+
+/* ============================================================
+   Smooth scrolling
+   ============================================================ */
+html {
+  scroll-behavior: smooth;
 }
 
 /* ============================================================
@@ -137,9 +196,9 @@ body {
   color: var(--foreground);
   font-family: var(--font-sf-text);
   font-weight: 400;
-  font-size: 14px;
-  line-height: 1.47059;            /* Apple's body line-height */
-  letter-spacing: -0.022em;        /* Apple's body tracking */
+  font-size: 15px;
+  line-height: 1.47059;
+  letter-spacing: -0.022em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -148,7 +207,6 @@ body {
 
 /* ============================================================
    Headings — SF Pro Display with Apple's tracking values
-   Apple uses negative tracking that gets tighter at larger sizes
    ============================================================ */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-sf-display);
@@ -156,28 +214,24 @@ h1, h2, h3, h4, h5, h6 {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Hero / Page title — 48px */
 h1 {
   font-weight: 600;
   letter-spacing: -0.009em;
-  line-height: 1.0834;
+  line-height: 1.08;
 }
 
-/* Section heading — 28-32px */
 h2 {
   font-weight: 600;
   letter-spacing: -0.012em;
   line-height: 1.1;
 }
 
-/* Card heading — 20-24px */
 h3 {
   font-weight: 600;
   letter-spacing: -0.012em;
   line-height: 1.2;
 }
 
-/* Sub-heading — 17-19px */
 h4 {
   font-weight: 600;
   letter-spacing: -0.01em;
@@ -191,38 +245,32 @@ h5, h6 {
 }
 
 /* ============================================================
-   Body text sizes — match Apple's typography scale
+   Body text sizes — Apple's typography scale
    ============================================================ */
-
-/* Small body text (12px and under — labels, captions) */
 .text-xs {
   font-family: var(--font-sf-text);
   letter-spacing: -0.01em;
   line-height: 1.33;
 }
 
-/* Default body (14px — base UI text) */
 .text-sm {
   font-family: var(--font-sf-text);
   letter-spacing: -0.016em;
   line-height: 1.42859;
 }
 
-/* Body large (16px) */
 .text-base {
   font-family: var(--font-sf-text);
   letter-spacing: -0.022em;
   line-height: 1.47059;
 }
 
-/* Intro / lead text (18-20px) — switch to Display */
 .text-lg {
   font-family: var(--font-sf-display);
   letter-spacing: 0.011em;
   line-height: 1.381;
 }
 
-/* Section headers (24px+) */
 .text-xl {
   font-family: var(--font-sf-display);
   letter-spacing: 0.009em;
@@ -248,8 +296,7 @@ h5, h6 {
 }
 
 /* ============================================================
-   Font weight refinements — Apple prefers medium/semibold
-   over bold for most UI elements
+   Font weight refinements
    ============================================================ */
 .font-medium {
   font-weight: 500;
@@ -277,20 +324,102 @@ input, textarea, select, button {
 input::placeholder,
 textarea::placeholder {
   letter-spacing: -0.016em;
-  color: #86868b;
+  color: var(--muted-foreground);
 }
 
 /* ============================================================
-   Smooth dark mode transitions
+   Glass Surface Utilities — Liquid Glass inspired
+   ============================================================ */
+.glass-surface {
+  background: var(--surface-glass);
+  backdrop-filter: blur(40px) saturate(1.8);
+  -webkit-backdrop-filter: blur(40px) saturate(1.8);
+  border: 1px solid var(--surface-glass-border);
+  box-shadow: var(--shadow-glass);
+}
+
+.glass-surface-elevated {
+  background: var(--surface-glass-elevated);
+  backdrop-filter: blur(60px) saturate(2);
+  -webkit-backdrop-filter: blur(60px) saturate(2);
+  border: 1px solid var(--surface-glass-border);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ============================================================
+   Apple-quality Skeleton Shimmer
+   ============================================================ */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--muted) 25%,
+    rgba(255, 255, 255, 0.08) 50%,
+    var(--muted) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+.dark .skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--muted) 25%,
+    rgba(255, 255, 255, 0.04) 50%,
+    var(--muted) 75%
+  );
+  background-size: 200% 100%;
+}
+
+/* ============================================================
+   Focus Ring — Apple-style
+   ============================================================ */
+*:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ============================================================
+   Smooth transitions for theme changes
    ============================================================ */
 *, *::before, *::after {
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+  transition-property: background-color, border-color;
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
 }
 
 /* ============================================================
-   Scrollbar styling
+   Scrollbar — minimal Apple-style
    ============================================================ */
-::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
-.dark ::-webkit-scrollbar-thumb { background: #475569; }
+::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.15); border-radius: var(--radius-full); }
+::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.25); }
+.dark ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); }
+.dark ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25); }
+
+/* ============================================================
+   Reduced motion support
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Calendar, Share2, Printer, Bookmark } from "lucide-react";
 import api from "@/lib/api";
+import { motion } from "framer-motion";
+import { fadeInUp } from "@/lib/motion";
 
 interface Verdict {
     id: number;
@@ -20,8 +22,6 @@ export default function VerdictPage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // In a real app, this would fetch /verdicts/{id}
-        // For now, we simulate fetching the specific verdict from our list
         const fetchVerdict = async () => {
             try {
                 const response = await api.get("/verdicts/recent");
@@ -37,65 +37,122 @@ export default function VerdictPage() {
         if (params.id) fetchVerdict();
     }, [params.id]);
 
-    if (loading) return <div className="p-8 text-center">Loading case details...</div>;
-    if (!verdict) return <div className="p-8 text-center text-red-500">Verdict not found</div>;
+    if (loading) return (
+        <div className="text-center py-16 text-[15px]" style={{ color: "var(--muted-foreground)" }}>
+            Loading case details...
+        </div>
+    );
+
+    if (!verdict) return (
+        <div className="text-center py-16 text-[15px]" style={{ color: "var(--destructive)" }}>
+            Verdict not found
+        </div>
+    );
+
+    const actionBtnStyle = {
+        color: "var(--muted-foreground)",
+    };
 
     return (
-        <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <motion.div
+            variants={fadeInUp}
+            initial="hidden"
+            animate="visible"
+            className="max-w-3xl mx-auto space-y-6"
+        >
             <button
                 onClick={() => router.back()}
-                className="flex items-center text-slate-500 hover:text-blue-600 transition mb-4"
+                className="flex items-center gap-1 text-[14px] font-medium transition-opacity duration-150 hover:opacity-70"
+                style={{ color: "var(--accent)" }}
             >
-                <ArrowLeft size={18} className="mr-1" /> Back to Dashboard
+                <ArrowLeft size={16} strokeWidth={1.5} /> Back to Dashboard
             </button>
 
-            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-8">
+            <div
+                className="p-8"
+                style={{
+                    background: "var(--card)",
+                    border: "1px solid var(--card-border)",
+                    borderRadius: "var(--radius-xl)",
+                    boxShadow: "var(--shadow-sm)",
+                }}
+            >
                 <div className="flex justify-between items-start mb-6">
                     <div>
-                        <span className="inline-block px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-xs font-semibold mb-3">
+                        <span
+                            className="inline-block px-3 py-1 text-[11px] font-semibold mb-3"
+                            style={{
+                                background: "rgba(0,113,227,0.06)",
+                                color: "var(--accent)",
+                                borderRadius: "var(--radius-full)",
+                            }}
+                        >
                             Supreme Court Judgement
                         </span>
-                        <h1 className="text-3xl font-bold text-slate-800 dark:text-white leading-tight">
+                        <h1
+                            className="font-display text-[24px] sm:text-[28px] font-semibold leading-tight"
+                            style={{ color: "var(--foreground)" }}
+                        >
                             {verdict.title}
                         </h1>
-                        <div className="flex items-center gap-4 mt-3 text-slate-500 text-sm">
+                        <div className="flex items-center gap-3 mt-3 text-[13px]" style={{ color: "var(--muted-foreground)" }}>
                             <span className="flex items-center gap-1">
-                                <Calendar size={14} />
+                                <Calendar size={13} strokeWidth={1.5} />
                                 {verdict.effective_date}
                             </span>
-                            <span>•</span>
+                            <span>\u00b7</span>
                             <span>Case ID: SC-{verdict.id}-2024</span>
                         </div>
                     </div>
-                    <div className="flex gap-2">
-                        <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 transition" title="Bookmark">
-                            <Bookmark size={20} />
-                        </button>
-                        <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 transition" title="Print">
-                            <Printer size={20} />
-                        </button>
-                        <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 transition" title="Share">
-                            <Share2 size={20} />
-                        </button>
+                    <div className="flex gap-1">
+                        {[
+                            { icon: Bookmark, label: "Bookmark" },
+                            { icon: Printer, label: "Print" },
+                            { icon: Share2, label: "Share" },
+                        ].map(({ icon: Icon, label }) => (
+                            <button
+                                key={label}
+                                className="p-2.5 rounded-lg transition-colors duration-150"
+                                style={actionBtnStyle}
+                                title={label}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = "var(--muted)"; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                            >
+                                <Icon size={18} strokeWidth={1.5} />
+                            </button>
+                        ))}
                     </div>
                 </div>
 
-                <div className="prose dark:prose-invert max-w-none">
-                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Summary</h3>
-                    <p className="text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800 mb-6">
-                        {verdict.summary}
-                    </p>
+                <div className="space-y-6">
+                    <div>
+                        <h3 className="text-[16px] font-semibold mb-2" style={{ color: "var(--foreground)" }}>Summary</h3>
+                        <p
+                            className="text-[14px] leading-relaxed p-5"
+                            style={{
+                                color: "var(--foreground)",
+                                background: "var(--muted)",
+                                borderRadius: "var(--radius-lg)",
+                            }}
+                        >
+                            {verdict.summary}
+                        </p>
+                    </div>
 
-                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Full Details</h3>
-                    <p className="text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line">
-                        {verdict.details}
-                        {/* Simulated extra content for "Full" feel */}
-                        <br /><br />
-                        The court, having heard the arguments from both sides, observed that the fundamental question of law revolves around the interpretation of the statute in question.
-                        Precedents were cited, but distinguishing factors in the current case necessitate a fresh perspective...
-                    </p>
+                    <div>
+                        <h3 className="text-[16px] font-semibold mb-2" style={{ color: "var(--foreground)" }}>Full Details</h3>
+                        <p
+                            className="text-[14px] leading-relaxed whitespace-pre-line"
+                            style={{ color: "var(--muted-foreground)" }}
+                        >
+                            {verdict.details}
+                            <br /><br />
+                            The court, having heard the arguments from both sides, observed that the fundamental question of law revolves around the interpretation of the statute in question.
+                            Precedents were cited, but distinguishing factors in the current case necessitate a fresh perspective...
+                        </p>
+                    </div>
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 }

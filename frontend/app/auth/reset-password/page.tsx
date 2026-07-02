@@ -7,6 +7,8 @@ import Link from "next/link";
 import { Loader2, Eye, EyeOff, Lock, CheckCircle2 } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "@/lib/api";
+import { motion } from "framer-motion";
+import { fadeInUp } from "@/lib/motion";
 
 function ResetPasswordForm() {
     const router = useRouter();
@@ -43,80 +45,129 @@ function ResetPasswordForm() {
         }
     };
 
+    const inputStyle = {
+        background: "var(--muted)",
+        borderRadius: "var(--radius-md)",
+        border: "1px solid transparent",
+        color: "var(--foreground)",
+    };
+
+    const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+        e.currentTarget.style.borderColor = "var(--accent)";
+        e.currentTarget.style.background = "var(--card)";
+    };
+    const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+        e.currentTarget.style.borderColor = "transparent";
+        e.currentTarget.style.background = "var(--muted)";
+    };
+
     if (done) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-4">
-                <div className="max-w-md w-full bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-8 text-center space-y-4">
-                    <div className="w-16 h-16 bg-green-500 rounded-2xl flex items-center justify-center mx-auto text-white shadow-lg">
-                        <CheckCircle2 size={32} />
+            <div className="min-h-screen flex items-center justify-center p-5" style={{ background: "var(--background)" }}>
+                <motion.div
+                    variants={fadeInUp}
+                    initial="hidden"
+                    animate="visible"
+                    className="max-w-[400px] w-full p-10 text-center space-y-5"
+                    style={{
+                        background: "var(--card)",
+                        border: "1px solid var(--card-border)",
+                        borderRadius: "var(--radius-2xl)",
+                        boxShadow: "var(--shadow-lg)",
+                    }}
+                >
+                    <div
+                        className="w-14 h-14 flex items-center justify-center mx-auto"
+                        style={{ background: "rgba(52,199,89,0.1)", borderRadius: "var(--radius-xl)" }}
+                    >
+                        <CheckCircle2 size={28} style={{ color: "#34c759" }} strokeWidth={1.5} />
                     </div>
-                    <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Password Reset!</h1>
-                    <p className="text-slate-500">Your password has been updated successfully.</p>
-                    <button onClick={() => router.push("/auth/login")} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition">
+                    <h1 className="font-display text-[24px] font-semibold" style={{ color: "var(--foreground)" }}>
+                        Password Reset!
+                    </h1>
+                    <p className="text-[15px]" style={{ color: "var(--muted-foreground)" }}>
+                        Your password has been updated successfully.
+                    </p>
+                    <motion.button
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                        onClick={() => router.push("/auth/login")}
+                        className="w-full py-3.5 text-[15px] font-semibold text-white transition-colors duration-200"
+                        style={{ background: "var(--accent)", borderRadius: "var(--radius-full)" }}
+                    >
                         Go to Login
-                    </button>
-                </div>
+                    </motion.button>
+                </motion.div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-4">
-            <div className="max-w-md w-full bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-8">
+        <div className="min-h-screen flex items-center justify-center p-5" style={{ background: "var(--background)" }}>
+            <motion.div
+                variants={fadeInUp}
+                initial="hidden"
+                animate="visible"
+                className="max-w-[400px] w-full p-10"
+                style={{
+                    background: "var(--card)",
+                    border: "1px solid var(--card-border)",
+                    borderRadius: "var(--radius-2xl)",
+                    boxShadow: "var(--shadow-lg)",
+                }}
+            >
                 <div className="text-center mb-8">
-                    <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-white shadow-lg shadow-blue-600/30">
-                        <Lock size={32} />
+                    <div
+                        className="w-14 h-14 flex items-center justify-center mx-auto mb-5"
+                        style={{ background: "var(--accent)", borderRadius: "var(--radius-xl)" }}
+                    >
+                        <Lock size={28} className="text-white" strokeWidth={1.5} />
                     </div>
-                    <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Set New Password</h1>
-                    <p className="text-slate-500 mt-2">Enter your new password below</p>
+                    <h1 className="font-display text-[24px] font-semibold" style={{ color: "var(--foreground)" }}>
+                        Set New Password
+                    </h1>
+                    <p className="text-[15px] mt-2" style={{ color: "var(--muted-foreground)" }}>
+                        Enter your new password below
+                    </p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-5">
+                <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">New Password</label>
+                        <label className="block text-[13px] font-medium mb-2" style={{ color: "var(--foreground)" }}>New Password</label>
                         <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                            <input
-                                type={showPassword ? "text" : "password"}
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="w-full pl-10 pr-10 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition"
-                                placeholder="••••••••"
-                                required
-                            />
-                            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2" size={16} strokeWidth={1.5} style={{ color: "var(--muted-foreground)" }} />
+                            <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full pl-10 pr-10 py-3 text-[15px] outline-none transition-all duration-200" style={inputStyle} onFocus={handleFocus} onBlur={handleBlur} placeholder="Minimum 8 characters" required />
+                            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 p-0.5" style={{ color: "var(--muted-foreground)" }}>
+                                {showPassword ? <EyeOff size={16} strokeWidth={1.5} /> : <Eye size={16} strokeWidth={1.5} />}
                             </button>
                         </div>
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Confirm Password</label>
+                        <label className="block text-[13px] font-medium mb-2" style={{ color: "var(--foreground)" }}>Confirm Password</label>
                         <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                            <input
-                                type={showPassword ? "text" : "password"}
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition"
-                                placeholder="••••••••"
-                                required
-                            />
+                            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2" size={16} strokeWidth={1.5} style={{ color: "var(--muted-foreground)" }} />
+                            <input type={showPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full pl-10 pr-4 py-3 text-[15px] outline-none transition-all duration-200" style={inputStyle} onFocus={handleFocus} onBlur={handleBlur} placeholder="Re-enter your password" required />
                         </div>
                     </div>
 
-                    <button
+                    <motion.button
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3.5 rounded-xl transition flex items-center justify-center gap-2 disabled:opacity-70"
+                        className="w-full py-3.5 text-[15px] font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-60 transition-colors duration-200 mt-6"
+                        style={{ background: "var(--accent)", borderRadius: "var(--radius-full)" }}
                     >
-                        {loading ? <Loader2 className="animate-spin" size={20} /> : "Update Password"}
-                    </button>
-                    <p className="text-center text-sm text-slate-500">
-                        <Link href="/auth/login" className="text-blue-600 hover:underline">Back to Login</Link>
+                        {loading ? <Loader2 className="animate-spin" size={18} /> : "Update Password"}
+                    </motion.button>
+                    <p className="text-center text-[14px]" style={{ color: "var(--muted-foreground)" }}>
+                        <Link href="/auth/login" className="font-medium transition-opacity duration-150 hover:opacity-70" style={{ color: "var(--accent)" }}>
+                            Back to Login
+                        </Link>
                     </p>
                 </form>
-            </div>
+            </motion.div>
         </div>
     );
 }
@@ -125,7 +176,7 @@ export default function ResetPasswordPage() {
     return (
         <Suspense fallback={
             <div className="min-h-screen flex items-center justify-center">
-                <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                <div className="w-6 h-6 rounded-full animate-spin" style={{ border: "2px solid var(--accent)", borderTopColor: "transparent" }} />
             </div>
         }>
             <ResetPasswordForm />

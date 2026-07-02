@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth-context";
+import { appleSoftSpring, scaleIn, backdropFade } from "@/lib/motion";
 
 interface Message {
     role: "user" | "assistant";
@@ -60,10 +61,9 @@ export default function ChatPage() {
     const loadSession = async (sessionId: number) => {
         setLoading(true);
         setCurrentSessionId(sessionId);
-        setMobileSessionsOpen(false); // Close drawer on mobile when selecting session
+        setMobileSessionsOpen(false);
         try {
             const res = await api.get(`/chat/sessions/${sessionId}`);
-            // Map backend history to frontend format
             setMessages(res.data.map((m: any) => ({
                 role: m.role,
                 content: m.content,
@@ -81,20 +81,18 @@ export default function ChatPage() {
         setMessages([]);
         setInput("");
         setPendingFile(null);
-        setLoading(false); // Ensure loading state is reset
-        setMobileSessionsOpen(false); // Close drawer on mobile
+        setLoading(false);
+        setMobileSessionsOpen(false);
 
-        // Reset file input
         if (fileInputRef.current) {
             fileInputRef.current.value = "";
         }
 
-        // Focus input for immediate typing
         setTimeout(() => {
             textareaRef.current?.focus();
         }, 50);
 
-        toast.dismiss(); // Clear any existing toasts
+        toast.dismiss();
         toast.success("New conversation started");
     };
 
@@ -178,12 +176,10 @@ export default function ChatPage() {
             return;
         }
         try {
-            // Use the same local-date construction as the schedule page's handleAddEvent.
-            // Building Date from parts (not a string) avoids any UTC/timezone parsing ambiguity.
             const [year, month, day] = (eventData.date as string).split('-').map(Number);
             const timeParts = (eventData.time || "10:00").split(':').map(Number);
             const localDate = new Date(year, month - 1, day, timeParts[0], timeParts[1] || 0, 0);
-            const dateTimeStr = localDate.toISOString(); // UTC ISO string the backend expects
+            const dateTimeStr = localDate.toISOString();
 
             await api.post("/schedule/", {
                 case_name: eventData.title,
@@ -229,21 +225,32 @@ export default function ChatPage() {
             } catch (e) { }
 
             return (
-                <div className="[color:inherit]">
+                <div>
                     <div className="whitespace-pre-wrap">{textPart}</div>
                     {eventData && (
-                        <div className="mt-4 bg-white dark:bg-slate-800 border border-blue-200 dark:border-slate-600 rounded-xl p-4 shadow-sm max-w-sm">
-                            <div className="flex items-center gap-2 mb-2 text-blue-600 dark:text-blue-400 font-semibold">
-                                <CalendarIcon size={18} />
+                        <div
+                            className="mt-4 p-4 max-w-sm"
+                            style={{
+                                background: "var(--muted)",
+                                borderRadius: "var(--radius-lg)",
+                                border: "1px solid var(--separator)",
+                            }}
+                        >
+                            <div className="flex items-center gap-2 mb-2 text-[13px] font-semibold" style={{ color: "var(--accent)" }}>
+                                <CalendarIcon size={15} strokeWidth={1.5} />
                                 <span>Suggested Event</span>
                             </div>
-                            <div className="text-sm space-y-1 mb-4 text-slate-700 dark:text-slate-200">
-                                <div className="font-medium text-slate-800 dark:text-white">{eventData.title}</div>
-                                <div className="text-slate-500 dark:text-slate-400">{eventData.date} at {eventData.time}</div>
+                            <div className="text-[13px] space-y-1 mb-3">
+                                <div className="font-medium" style={{ color: "var(--foreground)" }}>{eventData.title}</div>
+                                <div style={{ color: "var(--muted-foreground)" }}>{eventData.date} at {eventData.time}</div>
                             </div>
                             <button
                                 onClick={() => handleQuickSchedule(eventData)}
-                                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-medium transition shadow-sm"
+                                className="w-full py-2 text-[13px] font-medium text-white transition-colors duration-200"
+                                style={{
+                                    background: "var(--accent)",
+                                    borderRadius: "var(--radius-md)",
+                                }}
                             >
                                 Add to Calendar
                             </button>
@@ -252,40 +259,46 @@ export default function ChatPage() {
                 </div>
             );
         }
-        return <div className="whitespace-pre-wrap [color:inherit]">{content}</div>;
+        return <div className="whitespace-pre-wrap">{content}</div>;
     };
 
-    /* Sessions sidebar - drawer on mobile, column on desktop */
+    /* Sessions sidebar */
     const sessionsPanel = (
-        <div className="flex flex-col h-full bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-800">
-            <div className="p-3 sm:p-4 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3 shrink-0">
-                <span className="font-semibold text-slate-800 dark:text-white lg:block hidden">Conversations</span>
+        <div className="flex flex-col h-full" style={{ background: "var(--card)", borderRight: "1px solid var(--separator)" }}>
+            <div className="p-3 sm:p-4 flex items-center gap-3 shrink-0" style={{ borderBottom: "1px solid var(--separator)" }}>
+                <span className="font-semibold text-[14px] lg:block hidden" style={{ color: "var(--foreground)" }}>Conversations</span>
                 <button
                     onClick={handleNewSession}
-                    className="flex-1 lg:flex-none flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-4 rounded-xl text-sm font-medium transition min-h-[44px]"
+                    className="flex-1 lg:flex-none flex items-center justify-center gap-2 py-2.5 px-4 text-[13px] font-medium text-white transition-colors duration-200 min-h-[44px]"
+                    style={{
+                        background: "var(--accent)",
+                        borderRadius: "var(--radius-full)",
+                    }}
                 >
-                    New Chat
+                    <Plus size={15} strokeWidth={2} /> New Chat
                 </button>
                 <button
                     onClick={() => setMobileSessionsOpen(false)}
-                    className="lg:hidden p-2.5 -mr-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    className="lg:hidden p-2.5 -mr-2 rounded-lg"
+                    style={{ color: "var(--muted-foreground)" }}
                     aria-label="Close"
                 >
-                    <X size={20} />
+                    <X size={18} />
                 </button>
             </div>
-            <div className="flex-1 overflow-y-auto p-2 space-y-1 min-h-0">
+            <div className="flex-1 overflow-y-auto p-2 space-y-0.5 min-h-0">
                 {!isLoggedIn ? (
                     <div className="flex flex-col items-center justify-center h-full py-10 px-4 text-center gap-3">
-                        <LogIn size={32} className="text-slate-300 dark:text-slate-600" />
-                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                        <LogIn size={28} style={{ color: "var(--muted-foreground)", opacity: 0.4 }} />
+                        <p className="text-[13px]" style={{ color: "var(--muted-foreground)" }}>
                             Login to save and view your chat history
                         </p>
                         <button
                             onClick={() => router.push("/auth/login?returnTo=/chat")}
-                            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition"
+                            className="flex items-center gap-2 px-4 py-2 text-[13px] font-medium text-white transition-colors duration-200"
+                            style={{ background: "var(--accent)", borderRadius: "var(--radius-full)" }}
                         >
-                            <LogIn size={14} />
+                            <LogIn size={13} />
                             Login
                         </button>
                     </div>
@@ -295,28 +308,34 @@ export default function ChatPage() {
                             <div key={session.id} className="group relative">
                                 <button
                                     onClick={() => loadSession(session.id)}
-                                    className={cn(
-                                        "w-full text-left p-3.5 rounded-xl text-sm truncate flex items-center gap-3 transition pr-12 min-h-[44px] touch-manipulation",
-                                        currentSessionId === session.id
-                                            ? "bg-slate-100 dark:bg-slate-800 text-blue-600 font-medium"
-                                            : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 active:bg-slate-100 dark:active:bg-slate-800"
-                                    )}
+                                    className="w-full text-left p-3 text-[13px] truncate flex items-center gap-2.5 transition-colors duration-150 pr-12 min-h-[44px]"
+                                    style={{
+                                        borderRadius: "var(--radius-md)",
+                                        background: currentSessionId === session.id ? "var(--muted)" : "transparent",
+                                        color: currentSessionId === session.id ? "var(--accent)" : "var(--muted-foreground)",
+                                        fontWeight: currentSessionId === session.id ? 500 : 400,
+                                    }}
+                                    onMouseEnter={(e) => { if (currentSessionId !== session.id) e.currentTarget.style.background = "var(--muted)"; }}
+                                    onMouseLeave={(e) => { if (currentSessionId !== session.id) e.currentTarget.style.background = "transparent"; }}
                                 >
-                                    <MessageSquare size={16} className="shrink-0" />
+                                    <MessageSquare size={14} className="shrink-0" strokeWidth={1.5} />
                                     <span className="truncate">{session.title}</span>
                                 </button>
                                 <button
                                     onClick={(e) => handleDeleteSession(e, session.id)}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-red-500 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 lg:opacity-0 lg:group-hover:opacity-100 transition"
+                                    className="absolute right-1.5 top-1/2 -translate-y-1/2 p-2 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-md lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-150"
+                                    style={{ color: "var(--muted-foreground)" }}
                                     title="Delete Conversation"
                                     aria-label="Delete conversation"
+                                    onMouseEnter={(e) => { e.currentTarget.style.color = "var(--destructive)"; e.currentTarget.style.background = "rgba(255,59,48,0.06)"; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.color = "var(--muted-foreground)"; e.currentTarget.style.background = "transparent"; }}
                                 >
-                                    <Trash2 size={16} />
+                                    <Trash2 size={14} strokeWidth={1.5} />
                                 </button>
                             </div>
                         ))}
                         {sessions.length === 0 && (
-                            <div className="text-center py-10 text-slate-500 dark:text-slate-400 text-sm px-4">
+                            <div className="text-center py-10 text-[13px] px-4" style={{ color: "var(--muted-foreground)" }}>
                                 No history yet. Start a new chat above.
                             </div>
                         )}
@@ -327,47 +346,82 @@ export default function ChatPage() {
     );
 
     return (
-        <div className="flex flex-col lg:flex-row h-[calc(100vh-6rem)] min-h-0 max-h-[calc(100dvh-8rem)] lg:h-[calc(100vh-8rem)] gap-0 lg:gap-6 rounded-2xl overflow-hidden">
+        <div
+            className="flex flex-col lg:flex-row h-[calc(100vh-6rem)] min-h-0 max-h-[calc(100dvh-8rem)] lg:h-[calc(100vh-8rem)] gap-0 lg:gap-4 overflow-hidden"
+            style={{ borderRadius: "var(--radius-xl)" }}
+        >
             {/* Delete Conversation Confirmation Modal */}
-            {confirmDeleteSessionId !== null && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4 animate-in fade-in duration-200">
-                    <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-slate-200 dark:border-slate-700">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-500/20 flex items-center justify-center shrink-0">
-                                <Trash2 size={18} className="text-red-600 dark:text-red-400" />
+            <AnimatePresence>
+                {confirmDeleteSessionId !== null && (
+                    <>
+                        <motion.div
+                            variants={backdropFade}
+                            initial="hidden"
+                            animate="visible"
+                            exit="exit"
+                            className="fixed inset-0 z-[60]"
+                            style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(8px)" }}
+                            onClick={() => setConfirmDeleteSessionId(null)}
+                        />
+                        <motion.div
+                            variants={scaleIn}
+                            initial="hidden"
+                            animate="visible"
+                            exit="exit"
+                            className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+                            onClick={(e) => e.target === e.currentTarget && setConfirmDeleteSessionId(null)}
+                        >
+                            <div
+                                className="max-w-sm w-full p-6"
+                                style={{
+                                    background: "var(--card)",
+                                    border: "1px solid var(--card-border)",
+                                    borderRadius: "var(--radius-xl)",
+                                    boxShadow: "var(--shadow-xl)",
+                                }}
+                            >
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "rgba(255,59,48,0.08)" }}>
+                                        <Trash2 size={18} style={{ color: "var(--destructive)" }} />
+                                    </div>
+                                    <h2 className="text-[17px] font-semibold" style={{ color: "var(--foreground)" }}>Delete Conversation?</h2>
+                                </div>
+                                <p className="text-[14px] mb-6" style={{ color: "var(--muted-foreground)" }}>
+                                    Are you sure you want to delete <strong style={{ color: "var(--foreground)" }}>{sessions.find(s => s.id === confirmDeleteSessionId)?.title}</strong>? This action cannot be undone.
+                                </p>
+                                <div className="flex gap-2 justify-end">
+                                    <button
+                                        onClick={() => setConfirmDeleteSessionId(null)}
+                                        className="px-4 py-2 text-[13px] font-medium transition-colors duration-150"
+                                        style={{ color: "var(--foreground)", background: "var(--muted)", borderRadius: "var(--radius-md)" }}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={confirmDeleteSession}
+                                        className="px-4 py-2 text-[13px] font-medium text-white flex items-center gap-2 transition-colors duration-150"
+                                        style={{ background: "var(--destructive)", borderRadius: "var(--radius-md)" }}
+                                    >
+                                        <Trash2 size={13} /> Delete
+                                    </button>
+                                </div>
                             </div>
-                            <h2 className="text-lg font-bold text-slate-800 dark:text-white">Delete Conversation?</h2>
-                        </div>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-                            Are you sure you want to delete <strong className="text-slate-800 dark:text-slate-200">{sessions.find(s => s.id === confirmDeleteSessionId)?.title}</strong>? This action cannot be undone.
-                        </p>
-                        <div className="flex gap-3 justify-end">
-                            <button
-                                onClick={() => setConfirmDeleteSessionId(null)}
-                                className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={confirmDeleteSession}
-                                className="px-4 py-2 text-sm font-medium bg-red-600 hover:bg-red-700 text-white rounded-xl transition flex items-center gap-2"
-                            >
-                                <Trash2 size={14} />
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
+
             {/* Mobile: overlay when sessions open */}
             <AnimatePresence>
                 {mobileSessionsOpen && (
                     <>
                         <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+                            variants={backdropFade}
+                            initial="hidden"
+                            animate="visible"
+                            exit="exit"
+                            className="fixed inset-0 z-40 lg:hidden"
+                            style={{ background: "rgba(0,0,0,0.4)" }}
                             onClick={() => setMobileSessionsOpen(false)}
                             aria-hidden
                         />
@@ -375,8 +429,11 @@ export default function ChatPage() {
                             initial={{ x: "-100%" }}
                             animate={{ x: 0 }}
                             exit={{ x: "-100%" }}
-                            transition={{ type: "tween", duration: 0.2 }}
-                            className="fixed inset-y-0 left-0 w-[min(280px,85vw)] z-50 lg:hidden flex flex-col bg-white dark:bg-slate-800 shadow-xl"
+                            transition={appleSoftSpring}
+                            className="fixed inset-y-0 left-0 w-[min(300px,85vw)] z-50 lg:hidden flex flex-col"
+                            style={{
+                                boxShadow: "var(--shadow-xl)",
+                            }}
                         >
                             {sessionsPanel}
                         </motion.div>
@@ -384,53 +441,97 @@ export default function ChatPage() {
                 )}
             </AnimatePresence>
 
-            {/* Sidebar - hidden on mobile (shown in drawer above) */}
-            <div className="hidden lg:flex w-64 shrink-0 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex-col bg-white dark:bg-slate-800">
+            {/* Sidebar - hidden on mobile */}
+            <div
+                className="hidden lg:flex w-64 shrink-0 overflow-hidden flex-col"
+                style={{
+                    background: "var(--card)",
+                    border: "1px solid var(--card-border)",
+                    borderRadius: "var(--radius-xl)",
+                }}
+            >
                 {sessionsPanel}
             </div>
 
             {/* Main Chat Area */}
-            <div className="flex-1 min-w-0 flex flex-col bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden relative">
-                {/* Mobile: header with menu to open sessions */}
-                <div className="lg:hidden flex items-center gap-2 p-3 border-b border-slate-200 dark:border-slate-800 shrink-0">
+            <div
+                className="flex-1 min-w-0 flex flex-col overflow-hidden relative"
+                style={{
+                    background: "var(--card)",
+                    border: "1px solid var(--card-border)",
+                    borderRadius: "var(--radius-xl)",
+                }}
+            >
+                {/* Mobile: header with menu */}
+                <div
+                    className="lg:hidden flex items-center gap-2 px-4 py-3 shrink-0"
+                    style={{ borderBottom: "1px solid var(--separator)" }}
+                >
                     <button
                         onClick={() => setMobileSessionsOpen(true)}
-                        className="p-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation"
+                        className="p-2.5 rounded-lg min-w-[44px] min-h-[44px] flex items-center justify-center"
+                        style={{ color: "var(--muted-foreground)" }}
                         aria-label="Open conversations"
                     >
-                        <Menu size={22} />
+                        <Menu size={20} strokeWidth={1.5} />
                     </button>
-                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">
+                    <span className="text-[14px] font-medium truncate" style={{ color: "var(--foreground)" }}>
                         {currentSessionId ? sessions.find(s => s.id === currentSessionId)?.title ?? "Chat" : "New Chat"}
                     </span>
                 </div>
 
-                <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 space-y-4 sm:space-y-6 min-h-0">
+                {/* Messages */}
+                <div className="flex-1 overflow-y-auto overflow-x-hidden px-5 sm:px-8 py-6 space-y-5 min-h-0">
                     {messages.length === 0 ? (
-                        <div className="h-full min-h-[200px] flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 text-center px-4">
-                            <Bot size={40} className="mb-3 sm:mb-4" />
-                            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300">Select a conversation or start a new one to begin drafting.</p>
+                        <div className="h-full min-h-[200px] flex flex-col items-center justify-center text-center px-4">
+                            <div
+                                className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
+                                style={{ background: "var(--muted)" }}
+                            >
+                                <Bot size={28} strokeWidth={1.5} style={{ color: "var(--muted-foreground)" }} />
+                            </div>
+                            <p className="text-[15px]" style={{ color: "var(--foreground)" }}>
+                                Select a conversation or start a new one to begin drafting.
+                            </p>
                             <button
                                 onClick={() => setMobileSessionsOpen(true)}
-                                className="lg:hidden mt-4 text-blue-600 dark:text-blue-400 text-sm font-medium"
+                                className="lg:hidden mt-3 text-[13px] font-medium transition-opacity duration-150 hover:opacity-70"
+                                style={{ color: "var(--accent)" }}
                             >
                                 Open conversations
                             </button>
                         </div>
                     ) : (
                         messages.map((msg, idx) => (
-                            <div key={idx} className={cn("flex gap-3 sm:gap-4 max-w-4xl", msg.role === "user" ? "ml-auto flex-row-reverse" : "")}>
-                                <div className={cn("w-9 h-9 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5", msg.role === "assistant" ? "bg-blue-600 text-white" : "bg-slate-200 text-slate-700 dark:bg-slate-700")}>
-                                    {msg.role === "assistant" ? <Bot size={18} className="sm:w-4 sm:h-4" /> : <User size={18} className="sm:w-4 sm:h-4" />}
+                            <div key={idx} className={cn("flex gap-3 max-w-3xl", msg.role === "user" ? "ml-auto flex-row-reverse" : "")}>
+                                <div
+                                    className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-1"
+                                    style={{
+                                        background: msg.role === "assistant" ? "var(--muted)" : "var(--accent)",
+                                        color: msg.role === "assistant" ? "var(--muted-foreground)" : "white",
+                                    }}
+                                >
+                                    {msg.role === "assistant" ? <Bot size={16} strokeWidth={1.5} /> : <User size={16} strokeWidth={1.5} />}
                                 </div>
-                                <div className={cn("group relative p-4 sm:p-5 rounded-2xl shadow-sm border text-sm leading-relaxed max-w-[92%] sm:max-w-[85%] break-words",
-                                    msg.role === "assistant"
-                                        ? "bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-600 text-slate-800 dark:text-slate-100 rounded-tl-none"
-                                        : "bg-blue-50 dark:bg-blue-900/30 text-slate-800 dark:text-slate-100 border-blue-100 dark:border-blue-800 rounded-tr-none"
-                                )}>
+                                <div
+                                    className="p-4 text-[14px] leading-relaxed max-w-[88%] break-words"
+                                    style={{
+                                        background: msg.role === "assistant" ? "var(--muted)" : "rgba(0,113,227,0.06)",
+                                        borderRadius: msg.role === "assistant"
+                                            ? "var(--radius-lg) var(--radius-lg) var(--radius-lg) var(--radius-xs)"
+                                            : "var(--radius-lg) var(--radius-lg) var(--radius-xs) var(--radius-lg)",
+                                        color: "var(--foreground)",
+                                    }}
+                                >
                                     {msg.document_name && (
-                                        <div className="flex items-center gap-2 mb-3 pb-3 border-b border-black/5 dark:border-white/10 text-xs font-semibold text-blue-600 dark:text-blue-400">
-                                            <FileText size={14} />
+                                        <div
+                                            className="flex items-center gap-2 mb-3 pb-3 text-[12px] font-medium"
+                                            style={{
+                                                borderBottom: "1px solid var(--separator)",
+                                                color: "var(--accent)",
+                                            }}
+                                        >
+                                            <FileText size={13} strokeWidth={1.5} />
                                             <span className="truncate">Reference: {msg.document_name}</span>
                                         </div>
                                     )}
@@ -440,23 +541,45 @@ export default function ChatPage() {
                         ))
                     )}
                     {loading && (
-                        <div className="flex gap-3 sm:gap-4 max-w-4xl">
-                            <div className="w-9 h-9 sm:w-8 sm:h-8 rounded-full bg-blue-600 flex items-center justify-center shrink-0">
-                                <Bot size={18} className="text-white sm:w-4 sm:h-4" />
+                        <div className="flex gap-3 max-w-3xl">
+                            <div
+                                className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
+                                style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}
+                            >
+                                <Bot size={16} strokeWidth={1.5} />
                             </div>
-                            <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl rounded-tl-none border border-slate-200 dark:border-slate-600 flex items-center gap-2">
-                                <span className="w-2 h-2 bg-slate-400 dark:bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></span>
-                                <span className="w-2 h-2 bg-slate-400 dark:bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></span>
-                                <span className="w-2 h-2 bg-slate-400 dark:bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></span>
+                            <div
+                                className="p-4 flex items-center gap-1.5"
+                                style={{
+                                    background: "var(--muted)",
+                                    borderRadius: "var(--radius-lg) var(--radius-lg) var(--radius-lg) var(--radius-xs)",
+                                }}
+                            >
+                                {[0, 150, 300].map((delay) => (
+                                    <span
+                                        key={delay}
+                                        className="w-1.5 h-1.5 rounded-full animate-bounce"
+                                        style={{
+                                            background: "var(--muted-foreground)",
+                                            animationDelay: `${delay}ms`,
+                                        }}
+                                    />
+                                ))}
                             </div>
                         </div>
                     )}
                     <div ref={scrollRef} />
                 </div>
 
-                {/* Input Area - sticky, safe area friendly */}
-                <div className="p-3 sm:p-4 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-800 pb-[env(safe-area-inset-bottom,0)] shrink-0">
-                    <div className="flex gap-2 sm:gap-3 max-w-4xl mx-auto items-end">
+                {/* Input Area */}
+                <div
+                    className="px-4 sm:px-6 py-4 shrink-0"
+                    style={{
+                        borderTop: "1px solid var(--separator)",
+                        paddingBottom: "max(16px, env(safe-area-inset-bottom))",
+                    }}
+                >
+                    <div className="flex gap-2 max-w-3xl mx-auto items-end">
                         <input
                             type="file"
                             accept=".pdf"
@@ -467,19 +590,33 @@ export default function ChatPage() {
                         <button
                             onClick={() => fileInputRef.current?.click()}
                             disabled={loading}
-                            className={cn("p-3 rounded-xl transition disabled:opacity-50 relative min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation shrink-0",
-                                pendingFile ? "text-blue-600 bg-blue-50 dark:bg-blue-900/30" : "text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30"
-                            )}
+                            className="p-2.5 rounded-full transition-colors duration-150 disabled:opacity-50 min-w-[44px] min-h-[44px] flex items-center justify-center shrink-0"
+                            style={{
+                                color: pendingFile ? "var(--accent)" : "var(--muted-foreground)",
+                                background: pendingFile ? "rgba(0,113,227,0.06)" : "transparent",
+                            }}
                             title="Attach PDF Context"
                             aria-label="Attach PDF"
                         >
-                            <Paperclip size={20} />
-                            {pendingFile && <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>}
+                            <Paperclip size={18} strokeWidth={1.5} />
+                            {pendingFile && (
+                                <span
+                                    className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full"
+                                    style={{ background: "var(--destructive)" }}
+                                />
+                            )}
                         </button>
 
                         <div className="flex-1 min-w-0 relative">
                             {pendingFile && (
-                                <div className="absolute -top-7 left-0 text-xs text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-t border border-blue-100 dark:border-blue-800 flex items-center gap-1 max-w-full truncate">
+                                <div
+                                    className="absolute -top-7 left-2 text-[11px] font-medium px-2 py-0.5 flex items-center gap-1 max-w-full truncate"
+                                    style={{
+                                        background: "rgba(0,113,227,0.06)",
+                                        color: "var(--accent)",
+                                        borderRadius: "var(--radius-sm) var(--radius-sm) 0 0",
+                                    }}
+                                >
                                     <FileText size={10} className="shrink-0" /> <span className="truncate">{pendingFile.name}</span>
                                 </div>
                             )}
@@ -494,21 +631,33 @@ export default function ChatPage() {
                                     }
                                 }}
                                 placeholder={pendingFile ? "Add a message with your file..." : "Draft a notice for... or Ask about IPC Section..."}
-                                className={cn("w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none text-slate-800 dark:text-slate-100 resize-none max-h-28 sm:max-h-32 min-h-[44px] text-base sm:text-sm touch-manipulation",
-                                    pendingFile ? "rounded-tl-none" : ""
+                                className={cn(
+                                    "w-full px-4 py-3 text-[14px] outline-none resize-none max-h-28 min-h-[44px]",
+                                    pendingFile ? "" : ""
                                 )}
+                                style={{
+                                    background: "var(--muted)",
+                                    borderRadius: pendingFile ? "0 var(--radius-2xl) var(--radius-2xl) var(--radius-2xl)" : "var(--radius-2xl)",
+                                    border: "1px solid transparent",
+                                    color: "var(--foreground)",
+                                }}
+                                onFocus={(e) => { e.currentTarget.style.borderColor = "var(--accent)"; e.currentTarget.style.background = "var(--card)"; }}
+                                onBlur={(e) => { e.currentTarget.style.borderColor = "transparent"; e.currentTarget.style.background = "var(--muted)"; }}
                                 rows={1}
                             />
                         </div>
 
-                        <button
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                             onClick={handleSend}
                             disabled={(!input.trim() && !pendingFile) || loading}
-                            className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white p-3 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center transition shadow-lg shadow-blue-500/20 touch-manipulation shrink-0"
+                            className="w-10 h-10 rounded-full flex items-center justify-center text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-200 shrink-0"
+                            style={{ background: "var(--accent)" }}
                             aria-label="Send"
                         >
-                            <Send size={20} />
-                        </button>
+                            <Send size={16} strokeWidth={2} />
+                        </motion.button>
                     </div>
                 </div>
             </div>

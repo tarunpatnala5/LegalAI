@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { Calendar, BookOpen, AlertCircle, Search, ExternalLink, Plus } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { staggerContainer, staggerItem, fadeInUp } from "@/lib/motion";
 
 interface Judgment {
   title: string;
@@ -45,14 +46,12 @@ export default function Home() {
         api.get("/cases/"),
       ]);
       setUpcomingCount(scheduleRes.data.length);
-      // Pending Drafts = cases that are pending translation / awaiting review
       const pending = casesRes.data.filter((c: any) =>
         (c.translated_content ?? "").toLowerCase().includes("pending") ||
         c.status === "pending"
       );
       setPendingDraftsCount(pending.length);
     } catch {
-      // User not logged in or error — show dashes
       setUpcomingCount(null);
       setPendingDraftsCount(null);
     }
@@ -92,149 +91,272 @@ export default function Home() {
     }
   };
 
+  const getCategoryStyle = (category: string) => {
+    switch (category) {
+      case "Criminal":
+        return { background: "rgba(255,59,48,0.08)", color: "#ff3b30" };
+      case "Civil":
+        return { background: "rgba(52,199,89,0.08)", color: "#34c759" };
+      default:
+        return { background: "var(--muted)", color: "var(--muted-foreground)" };
+    }
+  };
+
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
-      <div className="flex items-center justify-between">
+    <div className="max-w-5xl mx-auto space-y-12">
+      {/* Hero */}
+      <motion.div
+        variants={fadeInUp}
+        initial="hidden"
+        animate="visible"
+        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+      >
         <div>
-          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
+          <h1
+            className="font-display text-[28px] sm:text-[34px] font-semibold tracking-tight"
+            style={{ color: "var(--foreground)" }}
+          >
             Legal Assistant Dashboard
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-[15px] mt-1" style={{ color: "var(--muted-foreground)" }}>
             Real-time updates from Supreme Court of India
           </p>
         </div>
-        <button
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={handleNewCase}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-lg shadow-blue-500/20"
+          className="flex items-center gap-2 px-5 py-2.5 text-[14px] font-medium text-white transition-colors duration-200"
+          style={{
+            background: "var(--accent)",
+            borderRadius: "var(--radius-full)",
+          }}
         >
-          <Plus size={16} />
+          <Plus size={16} strokeWidth={2} />
           New Case Analysis
-        </button>
-      </div>
+        </motion.button>
+      </motion.div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Live Judgments */}
-        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
-          <div className="flex items-center gap-3 text-blue-500 mb-2">
-            <BookOpen size={24} />
-            <span className="font-semibold">Live Judgments</span>
-          </div>
-          <div className="text-3xl font-bold text-slate-800 dark:text-white">{judgments.length}</div>
-          <p className="text-xs text-slate-500 mt-1">Updates this month</p>
-        </div>
+      {/* Stat Cards */}
+      <motion.div
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+        className="grid grid-cols-1 md:grid-cols-3 gap-4"
+      >
+        {[
+          {
+            icon: BookOpen,
+            label: "Live Judgments",
+            value: judgments.length,
+            tint: "rgba(0,113,227,0.08)",
+            iconColor: "var(--accent)",
+            subtitle: "Updates this month",
+          },
+          {
+            icon: Calendar,
+            label: "Upcoming Hearings",
+            value: isLoggedIn ? (upcomingCount === null ? "\u2014" : upcomingCount) : null,
+            tint: "rgba(175,82,222,0.08)",
+            iconColor: "#af52de",
+            subtitle: isLoggedIn ? "Scheduled for next 7 days" : "",
+            link: isLoggedIn ? "/schedule" : undefined,
+            loginRequired: !isLoggedIn,
+          },
+          {
+            icon: AlertCircle,
+            label: "Pending Drafts",
+            value: isLoggedIn ? (pendingDraftsCount === null ? "\u2014" : pendingDraftsCount) : null,
+            tint: "rgba(255,149,0,0.08)",
+            iconColor: "#ff9500",
+            subtitle: isLoggedIn ? "Cases requiring attention" : "",
+            link: isLoggedIn ? "/library" : undefined,
+            loginRequired: !isLoggedIn,
+          },
+        ].map((card, i) => (
+          <motion.div
+            key={i}
+            variants={staggerItem}
+            className="p-6 transition-shadow duration-200"
+            style={{
+              background: "var(--card)",
+              border: "1px solid var(--card-border)",
+              borderRadius: "var(--radius-xl)",
+              boxShadow: "var(--shadow-sm)",
+            }}
+          >
+            <div className="flex items-center gap-3 mb-3">
+              <div
+                className="w-9 h-9 rounded-full flex items-center justify-center"
+                style={{ background: card.tint }}
+              >
+                <card.icon size={18} style={{ color: card.iconColor }} strokeWidth={1.5} />
+              </div>
+              <span className="text-[14px] font-medium" style={{ color: "var(--foreground)" }}>
+                {card.label}
+              </span>
+            </div>
+            <div className="font-display text-[34px] font-semibold" style={{ color: "var(--foreground)" }}>
+              {card.loginRequired ? (
+                <span className="text-[15px] font-normal" style={{ color: "var(--muted-foreground)" }}>Login to view</span>
+              ) : card.value}
+            </div>
+            {card.subtitle && (
+              <p className="text-[12px] mt-1" style={{ color: "var(--muted-foreground)" }}>
+                {card.subtitle}
+              </p>
+            )}
+            {card.link && (
+              <Link
+                href={card.link}
+                className="text-[12px] font-medium mt-2 inline-block transition-opacity duration-150 hover:opacity-70"
+                style={{ color: card.iconColor }}
+              >
+                View details
+              </Link>
+            )}
+          </motion.div>
+        ))}
+      </motion.div>
 
-        {/* Upcoming Hearings */}
-        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
-          <div className="flex items-center gap-3 text-purple-500 mb-2">
-            <Calendar size={24} />
-            <span className="font-semibold">Upcoming Hearings</span>
+      {/* Latest Verdicts Section */}
+      <section className="space-y-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <h2
+              className="font-display text-[22px] font-semibold"
+              style={{ color: "var(--foreground)" }}
+            >
+              Latest Supreme Court Verdicts
+            </h2>
+            <span
+              className="text-[11px] font-medium px-2.5 py-1"
+              style={{
+                background: "var(--muted)",
+                color: "var(--muted-foreground)",
+                borderRadius: "var(--radius-full)",
+              }}
+            >
+              Live Feed
+            </span>
           </div>
-          <div className="text-3xl font-bold text-slate-800 dark:text-white">
-            {isLoggedIn
-              ? upcomingCount === null ? "—" : upcomingCount
-              : <span className="text-lg text-slate-400 dark:text-slate-500 font-medium">Login to view</span>
-            }
-          </div>
-          <p className="text-xs text-slate-500 mt-1">
-            {isLoggedIn ? "Scheduled for next 7 days" : ""}
-          </p>
-          {isLoggedIn && (
-            <Link href="/schedule" className="text-xs text-purple-500 hover:underline mt-1 inline-block">
-              View schedule →
-            </Link>
-          )}
-        </div>
-
-        {/* Pending Drafts */}
-        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
-          <div className="flex items-center gap-3 text-amber-500 mb-2">
-            <AlertCircle size={24} />
-            <span className="font-semibold">Pending Drafts</span>
-          </div>
-          <div className="text-3xl font-bold text-slate-800 dark:text-white">
-            {isLoggedIn
-              ? pendingDraftsCount === null ? "—" : pendingDraftsCount
-              : <span className="text-lg text-slate-400 dark:text-slate-500 font-medium">Login to view</span>
-            }
-          </div>
-          <p className="text-xs text-slate-500 mt-1">
-            {isLoggedIn ? "Cases requiring attention" : ""}
-          </p>
-          {isLoggedIn && (
-            <Link href="/library" className="text-xs text-amber-500 hover:underline mt-1 inline-block">
-              View library →
-            </Link>
-          )}
-        </div>
-      </div>
-
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
-            Latest Supreme Court Verdicts
-            <span className="text-xs font-normal text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">Live Feed</span>
-          </h2>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={16} />
+          <div className="relative w-full sm:w-auto">
+            <Search
+              className="absolute left-3.5 top-1/2 -translate-y-1/2"
+              size={15}
+              strokeWidth={1.5}
+              style={{ color: "var(--muted-foreground)" }}
+            />
             <input
               type="text"
-              placeholder="Search (e.g. Criminal, Civil)..."
-              className="pl-9 pr-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-64 transition-all"
+              placeholder="Search verdicts..."
+              className="w-full sm:w-64 pl-10 pr-4 py-2.5 text-[14px] outline-none transition-all duration-200"
+              style={{
+                background: "var(--muted)",
+                borderRadius: "var(--radius-full)",
+                color: "var(--foreground)",
+                border: "1px solid transparent",
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = "var(--accent)";
+                e.currentTarget.style.background = "var(--card)";
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = "transparent";
+                e.currentTarget.style.background = "var(--muted)";
+              }}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
         </div>
 
-        <div className="space-y-4">
+        <motion.div
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+          className="space-y-3"
+        >
           {loading ? (
             [1, 2, 3].map((i) => (
-              <div key={i} className="h-24 bg-slate-200 dark:bg-slate-800 rounded-xl animate-pulse"></div>
+              <div key={i} className="skeleton h-24" style={{ borderRadius: "var(--radius-lg)" }} />
             ))
           ) : (
             filteredJudgments.map((item, index) => (
-              <a key={index} href={item.link} target="_blank" rel="noopener noreferrer">
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="group bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-blue-500/50 hover:shadow-md transition-all cursor-pointer relative overflow-hidden h-full mb-4"
-                >
-                  <div className="absolute top-0 left-0 w-1 h-full bg-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                  <div className="pl-2">
-                    <div className="flex justify-between items-start">
-                      <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 group-hover:text-blue-500 transition-colors pr-10">
-                        {item.title}
-                      </h3>
-                      <div className="flex flex-col items-end gap-1">
-                        <span className="text-xs font-mono text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
-                          {item.date}
-                        </span>
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${item.category === 'Criminal' ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' :
-                          item.category === 'Civil' ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' :
-                            'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
-                          }`}>
-                          {item.category}
-                        </span>
-                      </div>
-                    </div>
-                    <p className="text-sm font-medium text-slate-600 dark:text-slate-300 mt-1 line-clamp-2">
+              <motion.a
+                key={index}
+                href={item.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                variants={staggerItem}
+                whileHover={{ scale: 1.005, y: -1 }}
+                transition={{ duration: 0.2 }}
+                className="group block p-5 transition-all duration-200 cursor-pointer"
+                style={{
+                  background: "var(--card)",
+                  border: "1px solid var(--card-border)",
+                  borderRadius: "var(--radius-lg)",
+                  boxShadow: "var(--shadow-sm)",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = "var(--shadow-md)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = "var(--shadow-sm)";
+                }}
+              >
+                <div className="flex justify-between items-start gap-4">
+                  <div className="flex-1 min-w-0">
+                    <h3
+                      className="text-[16px] font-semibold leading-snug group-hover:opacity-80 transition-opacity duration-150 line-clamp-1"
+                      style={{ color: "var(--foreground)" }}
+                    >
+                      {item.title}
+                    </h3>
+                    <p
+                      className="text-[14px] mt-1.5 line-clamp-2 leading-relaxed"
+                      style={{ color: "var(--muted-foreground)" }}
+                    >
                       {item.text}
                     </p>
-                    <div className="mt-2 flex items-center text-blue-500 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                      Read Judgment <ExternalLink size={12} className="ml-1" />
+                    <div className="flex items-center gap-2 mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <span className="text-[12px] font-medium" style={{ color: "var(--accent)" }}>
+                        Read Judgment
+                      </span>
+                      <ExternalLink size={11} style={{ color: "var(--accent)" }} />
                     </div>
                   </div>
-                </motion.div>
-              </a>
+                  <div className="flex flex-col items-end gap-2 shrink-0">
+                    <span
+                      className="text-[12px] px-2.5 py-1 font-medium"
+                      style={{
+                        background: "var(--muted)",
+                        color: "var(--muted-foreground)",
+                        borderRadius: "var(--radius-sm)",
+                      }}
+                    >
+                      {item.date}
+                    </span>
+                    <span
+                      className="text-[11px] px-2.5 py-0.5 font-medium"
+                      style={{
+                        ...getCategoryStyle(item.category),
+                        borderRadius: "var(--radius-full)",
+                      }}
+                    >
+                      {item.category}
+                    </span>
+                  </div>
+                </div>
+              </motion.a>
             ))
           )}
           {!loading && filteredJudgments.length === 0 && (
-            <div className="text-center py-10 text-slate-500">
-              No judgments found based on your search.
+            <div className="text-center py-16" style={{ color: "var(--muted-foreground)" }}>
+              <p className="text-[15px]">No judgments found based on your search.</p>
             </div>
           )}
-        </div>
+        </motion.div>
       </section>
     </div>
   );

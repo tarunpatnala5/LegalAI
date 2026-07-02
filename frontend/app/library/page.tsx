@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FileText, Search, Filter, Download, Trash2 } from "lucide-react";
+import { FileText, Search, Download, Trash2 } from "lucide-react";
 import api from "@/lib/api";
+import { motion, AnimatePresence } from "framer-motion";
+import { staggerContainer, staggerItem, fadeInUp, scaleIn, backdropFade } from "@/lib/motion";
 
 interface CaseDoc {
     id: number;
@@ -86,139 +88,213 @@ export default function LibraryPage() {
     );
 
     return (
-        <div className="max-w-6xl mx-auto">
+        <motion.div
+            variants={fadeInUp}
+            initial="hidden"
+            animate="visible"
+            className="max-w-5xl mx-auto"
+        >
             {/* Delete Confirmation Modal */}
-            {deleteConfirm && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl p-6 w-full max-w-sm mx-4">
-                        <div className="flex items-start gap-3 mb-4">
-                            <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center shrink-0">
-                                <Trash2 size={18} className="text-red-600" />
-                            </div>
-                            <div>
-                                <h3 className="font-semibold text-slate-800 dark:text-white">Delete Document</h3>
-                                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                                    Are you sure you want to delete{" "}
-                                    <span className="font-medium text-slate-700 dark:text-slate-200">
-                                        {deleteConfirm.filename}
-                                    </span>
-                                    ? This cannot be undone.
-                                </p>
-                            </div>
-                        </div>
-                        <div className="flex gap-2 justify-end">
-                            <button
-                                onClick={() => setDeleteConfirm(null)}
-                                className="px-4 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={() => handleDelete(deleteConfirm)}
-                                disabled={deletingId === deleteConfirm.id}
-                                className="px-4 py-2 text-sm rounded-lg bg-red-600 text-white hover:bg-red-700 transition disabled:opacity-60"
-                            >
-                                {deletingId === deleteConfirm.id ? "Deleting…" : "Delete"}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Case Library</h1>
-                <div className="flex gap-2">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-2.5 text-slate-400 w-4 h-4" />
-                        <input
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Search documents..."
-                            className="pl-9 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 dark:text-slate-200"
+            <AnimatePresence>
+                {deleteConfirm && (
+                    <>
+                        <motion.div
+                            variants={backdropFade}
+                            initial="hidden"
+                            animate="visible"
+                            exit="exit"
+                            className="fixed inset-0 z-50"
+                            style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(8px)" }}
+                            onClick={() => setDeleteConfirm(null)}
                         />
-                    </div>
-                    <button className="p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700">
-                        <Filter size={18} />
-                    </button>
+                        <motion.div
+                            variants={scaleIn}
+                            initial="hidden"
+                            animate="visible"
+                            exit="exit"
+                            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                            onClick={(e) => e.target === e.currentTarget && setDeleteConfirm(null)}
+                        >
+                            <div
+                                className="w-full max-w-sm p-6"
+                                style={{
+                                    background: "var(--card)",
+                                    border: "1px solid var(--card-border)",
+                                    borderRadius: "var(--radius-xl)",
+                                    boxShadow: "var(--shadow-xl)",
+                                }}
+                            >
+                                <div className="flex items-start gap-3 mb-4">
+                                    <div
+                                        className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                                        style={{ background: "rgba(255,59,48,0.08)" }}
+                                    >
+                                        <Trash2 size={18} style={{ color: "var(--destructive)" }} />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-[15px]" style={{ color: "var(--foreground)" }}>
+                                            Delete Document
+                                        </h3>
+                                        <p className="text-[13px] mt-1" style={{ color: "var(--muted-foreground)" }}>
+                                            Are you sure you want to delete{" "}
+                                            <span className="font-medium" style={{ color: "var(--foreground)" }}>
+                                                {deleteConfirm.filename}
+                                            </span>
+                                            ? This cannot be undone.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex gap-2 justify-end">
+                                    <button
+                                        onClick={() => setDeleteConfirm(null)}
+                                        className="px-4 py-2 text-[13px] font-medium transition-colors duration-150"
+                                        style={{
+                                            color: "var(--foreground)",
+                                            background: "var(--muted)",
+                                            borderRadius: "var(--radius-md)",
+                                        }}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(deleteConfirm)}
+                                        disabled={deletingId === deleteConfirm.id}
+                                        className="px-4 py-2 text-[13px] font-medium text-white transition-colors duration-150 disabled:opacity-60"
+                                        style={{
+                                            background: "var(--destructive)",
+                                            borderRadius: "var(--radius-md)",
+                                        }}
+                                    >
+                                        {deletingId === deleteConfirm.id ? "Deleting\u2026" : "Delete"}
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
+
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+                <h1
+                    className="font-display text-[28px] font-semibold"
+                    style={{ color: "var(--foreground)" }}
+                >
+                    Case Library
+                </h1>
+                <div className="relative w-full sm:w-auto">
+                    <Search
+                        className="absolute left-3.5 top-1/2 -translate-y-1/2"
+                        size={15}
+                        strokeWidth={1.5}
+                        style={{ color: "var(--muted-foreground)" }}
+                    />
+                    <input
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search documents..."
+                        className="w-full sm:w-64 pl-10 pr-4 py-2.5 text-[14px] outline-none transition-all duration-200"
+                        style={{
+                            background: "var(--muted)",
+                            borderRadius: "var(--radius-full)",
+                            border: "1px solid transparent",
+                            color: "var(--foreground)",
+                        }}
+                        onFocus={(e) => { e.currentTarget.style.borderColor = "var(--accent)"; e.currentTarget.style.background = "var(--card)"; }}
+                        onBlur={(e) => { e.currentTarget.style.borderColor = "transparent"; e.currentTarget.style.background = "var(--muted)"; }}
+                    />
                 </div>
             </div>
 
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-                <table className="w-full text-left text-sm">
-                    <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 font-medium">
-                        <tr>
-                            <th className="px-6 py-4">Document Name</th>
-                            <th className="px-6 py-4">Translation Language</th>
-                            <th className="px-6 py-4">Upload Date</th>
-                            <th className="px-6 py-4 text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
-                        {loading ? (
-                            <tr>
-                                <td colSpan={4} className="p-8 text-center text-slate-500">
-                                    Loading library…
-                                </td>
-                            </tr>
-                        ) : filteredCases.length === 0 ? (
-                            <tr>
-                                <td colSpan={4} className="p-8 text-center text-slate-500">
-                                    No documents found.
-                                </td>
-                            </tr>
-                        ) : (
-                            filteredCases.map((doc) => (
-                                <tr
-                                    key={doc.id}
-                                    className="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition cursor-pointer"
-                                >
-                                    <td onClick={() => handleView(doc)} className="px-6 py-4 flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded bg-red-100 dark:bg-red-900/20 text-red-500 flex items-center justify-center">
-                                            <FileText size={16} />
-                                        </div>
-                                        <span className="font-medium text-slate-700 dark:text-slate-200">
-                                            {doc.filename}
-                                        </span>
-                                    </td>
-                                    <td onClick={() => handleView(doc)} className="px-6 py-4 text-slate-600 dark:text-slate-400">
-                                        <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400">
-                                            {doc.target_language}
-                                        </span>
-                                    </td>
-                                    <td onClick={() => handleView(doc)} className="px-6 py-4 text-slate-500">
+            {/* Card-style rows */}
+            <motion.div
+                variants={staggerContainer}
+                initial="hidden"
+                animate="visible"
+                className="space-y-2"
+            >
+                {loading ? (
+                    [1, 2, 3].map((i) => (
+                        <div key={i} className="skeleton h-20" style={{ borderRadius: "var(--radius-lg)" }} />
+                    ))
+                ) : filteredCases.length === 0 ? (
+                    <div className="text-center py-16" style={{ color: "var(--muted-foreground)" }}>
+                        <FileText size={40} className="mx-auto mb-3 opacity-30" />
+                        <p className="text-[15px]">No documents found.</p>
+                    </div>
+                ) : (
+                    filteredCases.map((doc) => (
+                        <motion.div
+                            key={doc.id}
+                            variants={staggerItem}
+                            className="flex items-center gap-4 p-4 transition-all duration-200 cursor-pointer group"
+                            style={{
+                                background: "var(--card)",
+                                border: "1px solid var(--card-border)",
+                                borderRadius: "var(--radius-lg)",
+                                boxShadow: "var(--shadow-sm)",
+                            }}
+                            onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "var(--shadow-md)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "var(--shadow-sm)"; }}
+                            onClick={() => handleView(doc)}
+                        >
+                            <div
+                                className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                                style={{ background: "rgba(255,59,48,0.06)" }}
+                            >
+                                <FileText size={18} strokeWidth={1.5} style={{ color: "#ff3b30" }} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-[15px] font-medium truncate" style={{ color: "var(--foreground)" }}>
+                                    {doc.filename}
+                                </p>
+                                <div className="flex items-center gap-3 mt-0.5">
+                                    <span
+                                        className="text-[11px] font-medium px-2 py-0.5"
+                                        style={{
+                                            background: "rgba(0,113,227,0.06)",
+                                            color: "var(--accent)",
+                                            borderRadius: "var(--radius-full)",
+                                        }}
+                                    >
+                                        {doc.target_language}
+                                    </span>
+                                    <span className="text-[12px]" style={{ color: "var(--muted-foreground)" }}>
                                         {new Date(doc.uploaded_at).toLocaleDateString()}
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <div className="flex items-center justify-end gap-1">
-                                            {/* Download */}
-                                            <button
-                                                onClick={() => handleDownload(doc)}
-                                                disabled={downloadLoading === doc.id}
-                                                title="Download translated text"
-                                                className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded text-slate-500 hover:text-blue-600 transition disabled:opacity-50"
-                                            >
-                                                {downloadLoading === doc.id ? (
-                                                    <span className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin inline-block" />
-                                                ) : (
-                                                    <Download size={16} />
-                                                )}
-                                            </button>
-                                            {/* Delete */}
-                                            <button
-                                                onClick={() => setDeleteConfirm(doc)}
-                                                title="Delete document"
-                                                className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded text-slate-500 hover:text-red-600 transition"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-1 shrink-0">
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); handleDownload(doc); }}
+                                    disabled={downloadLoading === doc.id}
+                                    title="Download translated text"
+                                    className="p-2 rounded-lg transition-colors duration-150 disabled:opacity-50"
+                                    style={{ color: "var(--muted-foreground)" }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.background = "var(--muted)"; e.currentTarget.style.color = "var(--accent)"; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--muted-foreground)"; }}
+                                >
+                                    {downloadLoading === doc.id ? (
+                                        <span className="w-4 h-4 rounded-full animate-spin inline-block" style={{ border: "2px solid var(--accent)", borderTopColor: "transparent" }} />
+                                    ) : (
+                                        <Download size={16} strokeWidth={1.5} />
+                                    )}
+                                </button>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setDeleteConfirm(doc); }}
+                                    title="Delete document"
+                                    className="p-2 rounded-lg transition-colors duration-150"
+                                    style={{ color: "var(--muted-foreground)" }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,59,48,0.06)"; e.currentTarget.style.color = "var(--destructive)"; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--muted-foreground)"; }}
+                                >
+                                    <Trash2 size={16} strokeWidth={1.5} />
+                                </button>
+                            </div>
+                        </motion.div>
+                    ))
+                )}
+            </motion.div>
+        </motion.div>
     );
 }
