@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth-context";
+import { useTheme } from "@/lib/theme-context";
 import { appleSoftSpring, scaleIn, backdropFade } from "@/lib/motion";
 
 interface Message {
@@ -25,6 +26,7 @@ interface Session {
 export default function ChatPage() {
     const router = useRouter();
     const { isLoggedIn } = useAuth();
+    const { theme } = useTheme();
     const [sessions, setSessions] = useState<Session[]>([]);
     const [currentSessionId, setCurrentSessionId] = useState<number | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
@@ -37,14 +39,12 @@ export default function ChatPage() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-    // Load Sessions on Mount (only for logged-in users)
     useEffect(() => {
         if (isLoggedIn) {
             fetchSessions();
         }
     }, [isLoggedIn]);
 
-    // Scroll to bottom when messages change
     useEffect(() => {
         scrollRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
@@ -101,7 +101,6 @@ export default function ChatPage() {
 
         let activeSessionId = currentSessionId;
 
-        // 1. Handle File Upload if present
         if (pendingFile) {
             setLoading(true);
             try {
@@ -132,7 +131,6 @@ export default function ChatPage() {
             }
         }
 
-        // 2. Handle Text Message
         if (!input.trim()) {
             setLoading(false);
             return;
@@ -232,7 +230,7 @@ export default function ChatPage() {
                             className="mt-4 p-4 max-w-sm"
                             style={{
                                 background: "var(--muted)",
-                                borderRadius: "var(--radius-lg)",
+                                borderRadius: 12,
                                 border: "1px solid var(--separator)",
                             }}
                         >
@@ -249,7 +247,7 @@ export default function ChatPage() {
                                 className="w-full py-2 text-[13px] font-medium text-white transition-colors duration-200"
                                 style={{
                                     background: "var(--accent)",
-                                    borderRadius: "var(--radius-md)",
+                                    borderRadius: 8,
                                 }}
                             >
                                 Add to Calendar
@@ -262,25 +260,25 @@ export default function ChatPage() {
         return <div className="whitespace-pre-wrap">{content}</div>;
     };
 
-    /* Sessions sidebar */
+    /* Sessions sidebar — used on both desktop and mobile drawer */
     const sessionsPanel = (
-        <div className="flex flex-col h-full" style={{ background: "var(--card)", borderRight: "1px solid var(--separator)" }}>
-            <div className="p-3 sm:p-4 flex items-center gap-3 shrink-0" style={{ borderBottom: "1px solid var(--separator)" }}>
+        <div className="flex flex-col h-full" style={{ background: "var(--card)" }}>
+            <div className="p-4 flex items-center gap-3 shrink-0" style={{ borderBottom: "1px solid var(--separator)" }}>
                 <span className="font-semibold text-[14px] lg:block hidden" style={{ color: "var(--foreground)" }}>Conversations</span>
                 <button
                     onClick={handleNewSession}
                     className="flex-1 lg:flex-none flex items-center justify-center gap-2 py-2.5 px-4 text-[13px] font-medium text-white transition-colors duration-200 min-h-[44px]"
                     style={{
                         background: "var(--accent)",
-                        borderRadius: "var(--radius-full)",
+                        borderRadius: 12,
                     }}
                 >
                     <Plus size={15} strokeWidth={2} /> New Chat
                 </button>
                 <button
                     onClick={() => setMobileSessionsOpen(false)}
-                    className="lg:hidden p-2.5 -mr-2 rounded-lg"
-                    style={{ color: "var(--muted-foreground)" }}
+                    className="lg:hidden p-2.5 -mr-2"
+                    style={{ color: "var(--muted-foreground)", borderRadius: 8 }}
                     aria-label="Close"
                 >
                     <X size={18} />
@@ -296,7 +294,7 @@ export default function ChatPage() {
                         <button
                             onClick={() => router.push("/auth/login?returnTo=/chat")}
                             className="flex items-center gap-2 px-4 py-2 text-[13px] font-medium text-white transition-colors duration-200"
-                            style={{ background: "var(--accent)", borderRadius: "var(--radius-full)" }}
+                            style={{ background: "var(--accent)", borderRadius: 20 }}
                         >
                             <LogIn size={13} />
                             Login
@@ -310,7 +308,7 @@ export default function ChatPage() {
                                     onClick={() => loadSession(session.id)}
                                     className="w-full text-left p-3 text-[13px] truncate flex items-center gap-2.5 transition-colors duration-150 pr-12 min-h-[44px]"
                                     style={{
-                                        borderRadius: "var(--radius-md)",
+                                        borderRadius: 10,
                                         background: currentSessionId === session.id ? "var(--muted)" : "transparent",
                                         color: currentSessionId === session.id ? "var(--accent)" : "var(--muted-foreground)",
                                         fontWeight: currentSessionId === session.id ? 500 : 400,
@@ -323,8 +321,8 @@ export default function ChatPage() {
                                 </button>
                                 <button
                                     onClick={(e) => handleDeleteSession(e, session.id)}
-                                    className="absolute right-1.5 top-1/2 -translate-y-1/2 p-2 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-md lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-150"
-                                    style={{ color: "var(--muted-foreground)" }}
+                                    className="absolute right-1.5 top-1/2 -translate-y-1/2 p-2 min-w-[36px] min-h-[36px] flex items-center justify-center lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-150"
+                                    style={{ color: "var(--muted-foreground)", borderRadius: 8 }}
                                     title="Delete Conversation"
                                     aria-label="Delete conversation"
                                     onMouseEnter={(e) => { e.currentTarget.style.color = "var(--destructive)"; e.currentTarget.style.background = "rgba(255,59,48,0.06)"; }}
@@ -347,8 +345,12 @@ export default function ChatPage() {
 
     return (
         <div
-            className="flex flex-col lg:flex-row h-[calc(100vh-6rem)] min-h-0 max-h-[calc(100dvh-8rem)] lg:h-[calc(100vh-8rem)] gap-0 lg:gap-4 overflow-hidden"
-            style={{ borderRadius: "var(--radius-xl)" }}
+            className="flex flex-col lg:flex-row gap-0 lg:gap-4 overflow-hidden"
+            style={{
+                borderRadius: 16,
+                height: "calc(100vh - 10rem)",
+                maxHeight: "calc(100dvh - 10rem)",
+            }}
         >
             {/* Delete Conversation Confirmation Modal */}
             <AnimatePresence>
@@ -376,7 +378,7 @@ export default function ChatPage() {
                                 style={{
                                     background: "var(--card)",
                                     border: "1px solid var(--card-border)",
-                                    borderRadius: "var(--radius-xl)",
+                                    borderRadius: 20,
                                     boxShadow: "var(--shadow-xl)",
                                 }}
                             >
@@ -393,14 +395,14 @@ export default function ChatPage() {
                                     <button
                                         onClick={() => setConfirmDeleteSessionId(null)}
                                         className="px-4 py-2 text-[13px] font-medium transition-colors duration-150"
-                                        style={{ color: "var(--foreground)", background: "var(--muted)", borderRadius: "var(--radius-md)" }}
+                                        style={{ color: "var(--foreground)", background: "var(--muted)", borderRadius: 10 }}
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         onClick={confirmDeleteSession}
                                         className="px-4 py-2 text-[13px] font-medium text-white flex items-center gap-2 transition-colors duration-150"
-                                        style={{ background: "var(--destructive)", borderRadius: "var(--radius-md)" }}
+                                        style={{ background: "var(--destructive)", borderRadius: 10 }}
                                     >
                                         <Trash2 size={13} /> Delete
                                     </button>
@@ -411,7 +413,7 @@ export default function ChatPage() {
                 )}
             </AnimatePresence>
 
-            {/* Mobile: overlay when sessions open */}
+            {/* Mobile: overlay sidebar — NOT full width, 75% with blur backdrop */}
             <AnimatePresence>
                 {mobileSessionsOpen && (
                     <>
@@ -421,7 +423,11 @@ export default function ChatPage() {
                             animate="visible"
                             exit="exit"
                             className="fixed inset-0 z-40 lg:hidden"
-                            style={{ background: "rgba(0,0,0,0.4)" }}
+                            style={{
+                                background: "rgba(0,0,0,0.3)",
+                                backdropFilter: "blur(12px)",
+                                WebkitBackdropFilter: "blur(12px)",
+                            }}
                             onClick={() => setMobileSessionsOpen(false)}
                             aria-hidden
                         />
@@ -430,9 +436,11 @@ export default function ChatPage() {
                             animate={{ x: 0 }}
                             exit={{ x: "-100%" }}
                             transition={appleSoftSpring}
-                            className="fixed inset-y-0 left-0 w-[min(300px,85vw)] z-50 lg:hidden flex flex-col"
+                            className="fixed inset-y-0 left-0 z-50 lg:hidden flex flex-col"
                             style={{
+                                width: "min(280px, 75vw)",
                                 boxShadow: "var(--shadow-xl)",
+                                borderRight: "1px solid var(--separator)",
                             }}
                         >
                             {sessionsPanel}
@@ -441,13 +449,13 @@ export default function ChatPage() {
                 )}
             </AnimatePresence>
 
-            {/* Sidebar - hidden on mobile */}
+            {/* Desktop Sidebar */}
             <div
                 className="hidden lg:flex w-64 shrink-0 overflow-hidden flex-col"
                 style={{
                     background: "var(--card)",
                     border: "1px solid var(--card-border)",
-                    borderRadius: "var(--radius-xl)",
+                    borderRadius: 16,
                 }}
             >
                 {sessionsPanel}
@@ -459,7 +467,7 @@ export default function ChatPage() {
                 style={{
                     background: "var(--card)",
                     border: "1px solid var(--card-border)",
-                    borderRadius: "var(--radius-xl)",
+                    borderRadius: 16,
                 }}
             >
                 {/* Mobile: header with menu */}
@@ -469,8 +477,8 @@ export default function ChatPage() {
                 >
                     <button
                         onClick={() => setMobileSessionsOpen(true)}
-                        className="p-2.5 rounded-lg min-w-[44px] min-h-[44px] flex items-center justify-center"
-                        style={{ color: "var(--muted-foreground)" }}
+                        className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center"
+                        style={{ color: "var(--muted-foreground)", borderRadius: 8 }}
                         aria-label="Open conversations"
                     >
                         <Menu size={20} strokeWidth={1.5} />
@@ -481,12 +489,12 @@ export default function ChatPage() {
                 </div>
 
                 {/* Messages */}
-                <div className="flex-1 overflow-y-auto overflow-x-hidden px-5 sm:px-8 py-6 space-y-5 min-h-0">
+                <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-8 py-6 space-y-5 min-h-0">
                     {messages.length === 0 ? (
                         <div className="h-full min-h-[200px] flex flex-col items-center justify-center text-center px-4">
                             <div
-                                className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
-                                style={{ background: "var(--muted)" }}
+                                className="w-14 h-14 flex items-center justify-center mb-4"
+                                style={{ background: "var(--muted)", borderRadius: 14 }}
                             >
                                 <Bot size={28} strokeWidth={1.5} style={{ color: "var(--muted-foreground)" }} />
                             </div>
@@ -514,12 +522,12 @@ export default function ChatPage() {
                                     {msg.role === "assistant" ? <Bot size={16} strokeWidth={1.5} /> : <User size={16} strokeWidth={1.5} />}
                                 </div>
                                 <div
-                                    className="p-4 text-[14px] leading-relaxed max-w-[88%] break-words"
+                                    className="p-4 text-[14px] leading-relaxed max-w-[85%] sm:max-w-[80%] break-words"
                                     style={{
                                         background: msg.role === "assistant" ? "var(--muted)" : "rgba(0,113,227,0.06)",
                                         borderRadius: msg.role === "assistant"
-                                            ? "var(--radius-lg) var(--radius-lg) var(--radius-lg) var(--radius-xs)"
-                                            : "var(--radius-lg) var(--radius-lg) var(--radius-xs) var(--radius-lg)",
+                                            ? "16px 16px 16px 4px"
+                                            : "16px 16px 4px 16px",
                                         color: "var(--foreground)",
                                     }}
                                 >
@@ -552,7 +560,7 @@ export default function ChatPage() {
                                 className="p-4 flex items-center gap-1.5"
                                 style={{
                                     background: "var(--muted)",
-                                    borderRadius: "var(--radius-lg) var(--radius-lg) var(--radius-lg) var(--radius-xs)",
+                                    borderRadius: "16px 16px 16px 4px",
                                 }}
                             >
                                 {[0, 150, 300].map((delay) => (
@@ -571,15 +579,15 @@ export default function ChatPage() {
                     <div ref={scrollRef} />
                 </div>
 
-                {/* Input Area */}
+                {/* Input Area — upload icon vertically centered with textarea */}
                 <div
-                    className="px-4 sm:px-6 py-4 shrink-0"
+                    className="px-4 sm:px-6 py-3 shrink-0"
                     style={{
                         borderTop: "1px solid var(--separator)",
-                        paddingBottom: "max(16px, env(safe-area-inset-bottom))",
+                        paddingBottom: "max(12px, env(safe-area-inset-bottom))",
                     }}
                 >
-                    <div className="flex gap-2 max-w-3xl mx-auto items-end">
+                    <div className="flex gap-2 max-w-3xl mx-auto items-center">
                         <input
                             type="file"
                             accept=".pdf"
@@ -590,8 +598,9 @@ export default function ChatPage() {
                         <button
                             onClick={() => fileInputRef.current?.click()}
                             disabled={loading}
-                            className="p-2.5 rounded-full transition-colors duration-150 disabled:opacity-50 min-w-[44px] min-h-[44px] flex items-center justify-center shrink-0"
+                            className="p-2.5 transition-colors duration-150 disabled:opacity-50 w-10 h-10 flex items-center justify-center shrink-0 relative"
                             style={{
+                                borderRadius: 10,
                                 color: pendingFile ? "var(--accent)" : "var(--muted-foreground)",
                                 background: pendingFile ? "rgba(0,113,227,0.06)" : "transparent",
                             }}
@@ -601,7 +610,7 @@ export default function ChatPage() {
                             <Paperclip size={18} strokeWidth={1.5} />
                             {pendingFile && (
                                 <span
-                                    className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full"
+                                    className="absolute top-1 right-1 w-2 h-2 rounded-full"
                                     style={{ background: "var(--destructive)" }}
                                 />
                             )}
@@ -610,11 +619,11 @@ export default function ChatPage() {
                         <div className="flex-1 min-w-0 relative">
                             {pendingFile && (
                                 <div
-                                    className="absolute -top-7 left-2 text-[11px] font-medium px-2 py-0.5 flex items-center gap-1 max-w-full truncate"
+                                    className="absolute -top-7 left-3 text-[11px] font-medium px-2 py-0.5 flex items-center gap-1 max-w-full truncate"
                                     style={{
                                         background: "rgba(0,113,227,0.06)",
                                         color: "var(--accent)",
-                                        borderRadius: "var(--radius-sm) var(--radius-sm) 0 0",
+                                        borderRadius: "6px 6px 0 0",
                                     }}
                                 >
                                     <FileText size={10} className="shrink-0" /> <span className="truncate">{pendingFile.name}</span>
@@ -631,13 +640,10 @@ export default function ChatPage() {
                                     }
                                 }}
                                 placeholder={pendingFile ? "Add a message with your file..." : "Draft a notice for... or Ask about IPC Section..."}
-                                className={cn(
-                                    "w-full px-4 py-3 text-[14px] outline-none resize-none max-h-28 min-h-[44px]",
-                                    pendingFile ? "" : ""
-                                )}
+                                className="w-full px-4 py-3 text-[14px] outline-none resize-none max-h-28 min-h-[44px]"
                                 style={{
                                     background: "var(--muted)",
-                                    borderRadius: pendingFile ? "0 var(--radius-2xl) var(--radius-2xl) var(--radius-2xl)" : "var(--radius-2xl)",
+                                    borderRadius: pendingFile ? "0 20px 20px 20px" : 20,
                                     border: "1px solid transparent",
                                     color: "var(--foreground)",
                                 }}

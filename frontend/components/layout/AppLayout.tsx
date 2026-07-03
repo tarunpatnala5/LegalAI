@@ -26,7 +26,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <FloatingNavbar />
 
             {/* Main content — generous spacing, centered */}
-            <main className="w-full max-w-screen-xl mx-auto px-5 sm:px-8 lg:px-16 pt-20 lg:pt-[100px] pb-28 lg:pb-16">
+            <main className="w-full max-w-screen-xl mx-auto px-5 sm:px-8 lg:px-16 pt-24 lg:pt-[120px] pb-28 lg:pb-16">
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={pathname}

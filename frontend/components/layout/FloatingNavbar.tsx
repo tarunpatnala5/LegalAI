@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence, useMotionValueEvent, useScroll } from "framer-motion";
 import {
     Home, MessageSquare, PlusCircle, Library, Calendar,
-    Settings, Scale, LogOut, LogIn, Users, Bell, Sun, Moon, Search, X,
+    Settings, Scale, LogOut, LogIn, Users, Bell, Sun, Moon, X,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
@@ -140,6 +140,17 @@ export default function FloatingNavbar() {
         ...(user?.is_admin ? [adminItem] : []),
     ];
 
+    /* ── Shared blur style ────────────────────────────── */
+    const glassStyle = {
+        background: theme === "dark" ? "rgba(28,28,30,0.78)" : "rgba(255,255,255,0.78)",
+        backdropFilter: "blur(60px) saturate(1.8)",
+        WebkitBackdropFilter: "blur(60px) saturate(1.8)",
+        border: theme === "dark" ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(0,0,0,0.08)",
+        boxShadow: theme === "dark"
+            ? "0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3)"
+            : "0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)",
+    };
+
     /* ── Desktop Navbar — Netflix TV style ────────────── */
     const DesktopNav = () => (
         <motion.header
@@ -151,17 +162,11 @@ export default function FloatingNavbar() {
             transition={appleSpring}
             className="hidden lg:flex fixed top-5 left-1/2 -translate-x-1/2 z-50 items-center gap-1 px-3 py-2"
             style={{
-                borderRadius: "var(--radius-2xl)",
-                background: theme === "dark" ? "rgba(28,28,30,0.78)" : "rgba(255,255,255,0.78)",
-                backdropFilter: "blur(60px) saturate(1.8)",
-                WebkitBackdropFilter: "blur(60px) saturate(1.8)",
-                border: theme === "dark" ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(0,0,0,0.08)",
-                boxShadow: theme === "dark"
-                    ? "0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3)"
-                    : "0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)",
+                borderRadius: 22,
+                ...glassStyle,
             }}
         >
-            {/* Logo — always on one line */}
+            {/* Logo */}
             <Link
                 href="/"
                 className="flex items-center gap-2 px-3 py-1.5 mr-1 shrink-0"
@@ -175,7 +180,7 @@ export default function FloatingNavbar() {
             {/* Separator */}
             <div className="w-px h-5 shrink-0" style={{ background: "var(--separator)" }} />
 
-            {/* Nav Items — Netflix TV style: text-only centered, active has pill */}
+            {/* Nav Items — Netflix TV style */}
             <nav className="flex items-center gap-0.5 mx-1">
                 {allDesktopItems.map((item) => {
                     const isActive = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href));
@@ -194,7 +199,7 @@ export default function FloatingNavbar() {
                                     layoutId="activeNavPill"
                                     className="absolute inset-0"
                                     style={{
-                                        borderRadius: "var(--radius-full)",
+                                        borderRadius: 12,
                                         background: theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)",
                                     }}
                                     transition={appleSpring}
@@ -248,7 +253,7 @@ export default function FloatingNavbar() {
                                     exit="hidden"
                                     className="absolute right-0 top-full mt-3 w-80 overflow-hidden"
                                     style={{
-                                        borderRadius: "var(--radius-xl)",
+                                        borderRadius: 16,
                                         background: theme === "dark" ? "rgba(44,44,46,0.92)" : "rgba(255,255,255,0.92)",
                                         backdropFilter: "blur(60px) saturate(1.8)",
                                         WebkitBackdropFilter: "blur(60px) saturate(1.8)",
@@ -288,12 +293,13 @@ export default function FloatingNavbar() {
                     </div>
                 )}
 
-                {/* User / Login */}
+                {/* User / Login — consistent radius with parent bar */}
                 {isLoggedIn ? (
                     <button
                         onClick={() => router.push("/settings")}
-                        className="ml-1 flex items-center gap-2 pl-1 pr-3 py-1 rounded-full transition-all duration-200 shrink-0"
+                        className="ml-1 flex items-center gap-2 pl-1 pr-3 py-1 shrink-0 transition-all duration-200"
                         style={{
+                            borderRadius: 14,
                             border: "1px solid var(--separator)",
                         }}
                     >
@@ -310,8 +316,8 @@ export default function FloatingNavbar() {
                 ) : (
                     <Link
                         href="/auth/login"
-                        className="ml-1 flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-medium text-white transition-all duration-200 whitespace-nowrap shrink-0"
-                        style={{ background: "var(--accent)" }}
+                        className="ml-1 flex items-center gap-2 px-4 py-2 text-[13px] font-medium text-white transition-all duration-200 whitespace-nowrap shrink-0"
+                        style={{ borderRadius: 14, background: "var(--accent)" }}
                     >
                         <LogIn className="w-3.5 h-3.5" />
                         Sign In
@@ -321,7 +327,7 @@ export default function FloatingNavbar() {
         </motion.header>
     );
 
-    /* ── Mobile Bottom Nav ────────────────────────────── */
+    /* ── Mobile Bottom Nav — Apple Music style ────────── */
     const MobileNav = () => {
         const mobileItems = [
             navItems[0], // Home
@@ -333,7 +339,7 @@ export default function FloatingNavbar() {
 
         return (
             <>
-                {/* Mobile top bar — Apple-style with strong blur */}
+                {/* Mobile top bar */}
                 <div
                     className="lg:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-5 h-14"
                     style={{
@@ -399,13 +405,11 @@ export default function FloatingNavbar() {
                     </div>
                 </div>
 
-                {/* Bottom floating tab bar — NO repeat entrance animation */}
+                {/* Bottom floating tab bar — Apple Music style with individual rounded items */}
                 <nav
-                    className="lg:hidden fixed bottom-4 left-4 right-4 z-50 flex items-center justify-around"
+                    className="lg:hidden fixed bottom-4 left-4 right-4 z-50 flex items-center justify-around px-2 py-2"
                     style={{
-                        borderRadius: "var(--radius-2xl)",
-                        paddingBottom: "max(4px, env(safe-area-inset-bottom))",
-                        paddingTop: "4px",
+                        borderRadius: 20,
                         background: theme === "dark" ? "rgba(28,28,30,0.82)" : "rgba(255,255,255,0.82)",
                         backdropFilter: "blur(60px) saturate(1.8)",
                         WebkitBackdropFilter: "blur(60px) saturate(1.8)",
@@ -413,6 +417,7 @@ export default function FloatingNavbar() {
                         boxShadow: theme === "dark"
                             ? "0 4px 24px rgba(0,0,0,0.5)"
                             : "0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)",
+                        paddingBottom: "max(8px, env(safe-area-inset-bottom))",
                     }}
                 >
                     {mobileItems.map((item) => {
@@ -431,13 +436,18 @@ export default function FloatingNavbar() {
                                         router.push(item.href);
                                     }
                                 }}
-                                className="flex flex-col items-center justify-center py-2 px-3 min-w-[56px] min-h-[48px] transition-colors duration-150"
+                                className="flex flex-col items-center justify-center min-w-[52px] min-h-[46px] transition-all duration-200"
                                 style={{
+                                    borderRadius: 14,
+                                    padding: "6px 10px",
                                     color: isActive ? "var(--accent)" : "var(--muted-foreground)",
+                                    background: isActive
+                                        ? (theme === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,113,227,0.06)")
+                                        : "transparent",
                                 }}
                                 aria-label={item.name}
                             >
-                                <Icon className="w-[22px] h-[22px]" strokeWidth={isActive ? 2 : 1.5} />
+                                <Icon className="w-[20px] h-[20px]" strokeWidth={isActive ? 2 : 1.5} />
                                 <span className="text-[10px] mt-0.5 font-medium">{item.name}</span>
                             </button>
                         );
@@ -468,7 +478,7 @@ export default function FloatingNavbar() {
                                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
                                 className="lg:hidden fixed bottom-0 left-0 right-0 z-50"
                                 style={{
-                                    borderRadius: "var(--radius-2xl) var(--radius-2xl) 0 0",
+                                    borderRadius: "20px 20px 0 0",
                                     paddingBottom: "max(24px, env(safe-area-inset-bottom))",
                                     background: theme === "dark" ? "rgba(44,44,46,0.92)" : "rgba(255,255,255,0.92)",
                                     backdropFilter: "blur(60px) saturate(1.8)",
@@ -491,10 +501,9 @@ export default function FloatingNavbar() {
                                                 key={item.href}
                                                 href={item.href}
                                                 onClick={() => setMobileMoreOpen(false)}
-                                                className={cn(
-                                                    "flex items-center gap-4 px-4 py-3.5 rounded-xl transition-colors duration-150"
-                                                )}
+                                                className="flex items-center gap-4 px-4 py-3.5 transition-colors duration-150"
                                                 style={{
+                                                    borderRadius: 12,
                                                     background: isActive ? "var(--muted)" : "transparent",
                                                     color: isActive ? "var(--accent)" : "var(--foreground)",
                                                 }}
@@ -510,8 +519,8 @@ export default function FloatingNavbar() {
                                             <div className="my-2" style={{ borderTop: "1px solid var(--separator)" }} />
                                             <button
                                                 onClick={handleLogout}
-                                                className="w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-colors duration-150"
-                                                style={{ color: "var(--destructive)" }}
+                                                className="w-full flex items-center gap-4 px-4 py-3.5 transition-colors duration-150"
+                                                style={{ borderRadius: 12, color: "var(--destructive)" }}
                                             >
                                                 <LogOut className="w-5 h-5" strokeWidth={1.5} />
                                                 <span className="text-[15px] font-normal">Sign Out</span>
@@ -525,8 +534,8 @@ export default function FloatingNavbar() {
                                             <Link
                                                 href="/auth/login"
                                                 onClick={() => setMobileMoreOpen(false)}
-                                                className="w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-colors duration-150"
-                                                style={{ color: "var(--accent)" }}
+                                                className="w-full flex items-center gap-4 px-4 py-3.5 transition-colors duration-150"
+                                                style={{ borderRadius: 12, color: "var(--accent)" }}
                                             >
                                                 <LogIn className="w-5 h-5" strokeWidth={1.5} />
                                                 <span className="text-[15px] font-normal">Sign In</span>
