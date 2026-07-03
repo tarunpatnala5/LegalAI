@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
 import { useTheme } from "@/lib/theme-context";
 import api from "@/lib/api";
-import { appleSpring, fadeInDown, backdropFade, scaleIn } from "@/lib/motion";
+import { appleSpring, fadeInDown, backdropFade } from "@/lib/motion";
 
 interface ScheduleEvent {
     id: number;
@@ -40,6 +40,7 @@ export default function FloatingNavbar() {
     const { theme, toggleTheme } = useTheme();
 
     const [navVisible, setNavVisible] = useState(true);
+    const [hasAnimated, setHasAnimated] = useState(false);
     const [notifications, setNotifications] = useState<ScheduleEvent[]>([]);
     const [notificationsOpen, setNotificationsOpen] = useState(false);
     const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
@@ -52,6 +53,12 @@ export default function FloatingNavbar() {
     const initials = user?.full_name
         ? user.full_name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()
         : "?";
+
+    /* ── Mark initial animation as done after mount ───── */
+    useEffect(() => {
+        const timer = setTimeout(() => setHasAnimated(true), 600);
+        return () => clearTimeout(timer);
+    }, []);
 
     /* ── Scroll hide/show ─────────────────────────────── */
     useMotionValueEvent(scrollY, "change", (latest) => {
@@ -133,82 +140,77 @@ export default function FloatingNavbar() {
         ...(user?.is_admin ? [adminItem] : []),
     ];
 
-    /* ── Desktop Navbar ───────────────────────────────── */
+    /* ── Desktop Navbar — Netflix TV style ────────────── */
     const DesktopNav = () => (
         <motion.header
-            initial={{ y: -100, opacity: 0 }}
+            initial={hasAnimated ? false : { y: -100, opacity: 0 }}
             animate={{
                 y: navVisible ? 0 : -100,
                 opacity: navVisible ? 1 : 0,
             }}
             transition={appleSpring}
-            className="hidden lg:flex fixed top-5 left-1/2 -translate-x-1/2 z-50 items-center gap-1 px-2 py-1.5 glass-surface"
-            style={{ borderRadius: "var(--radius-2xl)" }}
+            className="hidden lg:flex fixed top-5 left-1/2 -translate-x-1/2 z-50 items-center gap-1 px-3 py-2"
+            style={{
+                borderRadius: "var(--radius-2xl)",
+                background: theme === "dark" ? "rgba(28,28,30,0.78)" : "rgba(255,255,255,0.78)",
+                backdropFilter: "blur(60px) saturate(1.8)",
+                WebkitBackdropFilter: "blur(60px) saturate(1.8)",
+                border: theme === "dark" ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(0,0,0,0.08)",
+                boxShadow: theme === "dark"
+                    ? "0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3)"
+                    : "0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)",
+            }}
         >
-            {/* Logo */}
+            {/* Logo — always on one line */}
             <Link
                 href="/"
-                className="flex items-center gap-2 px-4 py-2 mr-2"
+                className="flex items-center gap-2 px-3 py-1.5 mr-1 shrink-0"
             >
-                <Scale className="w-5 h-5" style={{ color: "var(--accent)" }} />
-                <span className="font-display font-semibold text-[15px] tracking-tight" style={{ color: "var(--foreground)" }}>
+                <Scale className="w-5 h-5 shrink-0" style={{ color: "var(--accent)" }} />
+                <span className="font-display font-semibold text-[15px] tracking-tight whitespace-nowrap" style={{ color: "var(--foreground)" }}>
                     Legal AI
                 </span>
             </Link>
 
             {/* Separator */}
-            <div className="w-px h-6" style={{ background: "var(--separator)" }} />
+            <div className="w-px h-5 shrink-0" style={{ background: "var(--separator)" }} />
 
-            {/* Nav Items */}
+            {/* Nav Items — Netflix TV style: text-only centered, active has pill */}
             <nav className="flex items-center gap-0.5 mx-1">
                 {allDesktopItems.map((item) => {
                     const isActive = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href));
-                    const Icon = item.icon;
                     return (
                         <Link
                             key={item.href}
                             href={item.href}
-                            className={cn(
-                                "relative flex items-center gap-2 px-3.5 py-2 rounded-full text-[13px] font-normal transition-all duration-200",
-                                isActive
-                                    ? "font-medium"
-                                    : "hover:opacity-80"
-                            )}
+                            className="relative px-3.5 py-1.5 text-[13px] transition-all duration-200 whitespace-nowrap"
                             style={{
-                                color: isActive ? "var(--accent)" : "var(--muted-foreground)",
+                                color: isActive ? "var(--foreground)" : "var(--muted-foreground)",
+                                fontWeight: isActive ? 600 : 400,
                             }}
                         >
                             {isActive && (
                                 <motion.div
-                                    layoutId="activeNavBg"
-                                    className="absolute inset-0 rounded-full"
+                                    layoutId="activeNavPill"
+                                    className="absolute inset-0"
                                     style={{
-                                        background: theme === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.04)",
+                                        borderRadius: "var(--radius-full)",
+                                        background: theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)",
                                     }}
                                     transition={appleSpring}
                                 />
                             )}
-                            <Icon className="w-4 h-4 relative z-10" strokeWidth={isActive ? 2 : 1.5} />
-                            <span className="relative z-10 whitespace-nowrap">{item.name}</span>
+                            <span className="relative z-10">{item.name}</span>
                         </Link>
                     );
                 })}
             </nav>
 
             {/* Separator */}
-            <div className="w-px h-6" style={{ background: "var(--separator)" }} />
+            <div className="w-px h-5 shrink-0" style={{ background: "var(--separator)" }} />
 
             {/* Right actions */}
             <div className="flex items-center gap-0.5 ml-1">
-                {/* Search (placeholder) */}
-                <button
-                    className="p-2 rounded-full transition-colors duration-150"
-                    style={{ color: "var(--muted-foreground)" }}
-                    aria-label="Search"
-                >
-                    <Search className="w-4 h-4" strokeWidth={1.5} />
-                </button>
-
                 {/* Theme toggle */}
                 <button
                     onClick={toggleTheme}
@@ -244,8 +246,15 @@ export default function FloatingNavbar() {
                                     initial="hidden"
                                     animate="visible"
                                     exit="hidden"
-                                    className="absolute right-0 top-full mt-3 w-80 glass-surface-elevated overflow-hidden"
-                                    style={{ borderRadius: "var(--radius-xl)" }}
+                                    className="absolute right-0 top-full mt-3 w-80 overflow-hidden"
+                                    style={{
+                                        borderRadius: "var(--radius-xl)",
+                                        background: theme === "dark" ? "rgba(44,44,46,0.92)" : "rgba(255,255,255,0.92)",
+                                        backdropFilter: "blur(60px) saturate(1.8)",
+                                        WebkitBackdropFilter: "blur(60px) saturate(1.8)",
+                                        border: theme === "dark" ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(0,0,0,0.06)",
+                                        boxShadow: "var(--shadow-xl)",
+                                    }}
                                 >
                                     <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--separator)" }}>
                                         <h3 className="font-semibold text-sm" style={{ color: "var(--foreground)" }}>
@@ -283,25 +292,25 @@ export default function FloatingNavbar() {
                 {isLoggedIn ? (
                     <button
                         onClick={() => router.push("/settings")}
-                        className="ml-1 flex items-center gap-2 pl-1 pr-3 py-1 rounded-full transition-all duration-200"
+                        className="ml-1 flex items-center gap-2 pl-1 pr-3 py-1 rounded-full transition-all duration-200 shrink-0"
                         style={{
                             border: "1px solid var(--separator)",
                         }}
                     >
                         <div
-                            className="w-7 h-7 rounded-full flex items-center justify-center text-white font-medium text-xs"
+                            className="w-7 h-7 rounded-full flex items-center justify-center text-white font-medium text-xs shrink-0"
                             style={{ background: "var(--accent)" }}
                         >
                             {initials}
                         </div>
-                        <span className="text-[13px] font-medium hidden xl:block" style={{ color: "var(--foreground)" }}>
+                        <span className="text-[13px] font-medium hidden xl:block whitespace-nowrap" style={{ color: "var(--foreground)" }}>
                             {user?.full_name?.split(" ")[0]}
                         </span>
                     </button>
                 ) : (
                     <Link
                         href="/auth/login"
-                        className="ml-1 flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-medium text-white transition-all duration-200"
+                        className="ml-1 flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-medium text-white transition-all duration-200 whitespace-nowrap shrink-0"
                         style={{ background: "var(--accent)" }}
                     >
                         <LogIn className="w-3.5 h-3.5" />
@@ -324,14 +333,19 @@ export default function FloatingNavbar() {
 
         return (
             <>
-                {/* Mobile top bar — minimal */}
+                {/* Mobile top bar — Apple-style with strong blur */}
                 <div
-                    className="lg:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-5 h-14 glass-surface"
-                    style={{ borderBottom: "1px solid var(--separator)" }}
+                    className="lg:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-5 h-14"
+                    style={{
+                        background: theme === "dark" ? "rgba(0,0,0,0.72)" : "rgba(255,255,255,0.72)",
+                        backdropFilter: "blur(60px) saturate(1.8)",
+                        WebkitBackdropFilter: "blur(60px) saturate(1.8)",
+                        borderBottom: theme === "dark" ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(0,0,0,0.06)",
+                    }}
                 >
                     <Link href="/" className="flex items-center gap-2">
-                        <Scale className="w-5 h-5" style={{ color: "var(--accent)" }} />
-                        <span className="font-display font-semibold text-[15px]" style={{ color: "var(--foreground)" }}>
+                        <Scale className="w-5 h-5 shrink-0" style={{ color: "var(--accent)" }} />
+                        <span className="font-display font-semibold text-[15px] whitespace-nowrap" style={{ color: "var(--foreground)" }}>
                             Legal AI
                         </span>
                     </Link>
@@ -368,7 +382,7 @@ export default function FloatingNavbar() {
                         {isLoggedIn ? (
                             <button
                                 onClick={() => router.push("/settings")}
-                                className="w-8 h-8 rounded-full flex items-center justify-center text-white font-medium text-xs"
+                                className="w-8 h-8 rounded-full flex items-center justify-center text-white font-medium text-xs shrink-0"
                                 style={{ background: "var(--accent)" }}
                             >
                                 {initials}
@@ -385,16 +399,20 @@ export default function FloatingNavbar() {
                     </div>
                 </div>
 
-                {/* Bottom floating tab bar */}
-                <motion.nav
-                    initial={{ y: 100 }}
-                    animate={{ y: 0 }}
-                    transition={appleSpring}
-                    className="lg:hidden fixed bottom-4 left-4 right-4 z-50 glass-surface flex items-center justify-around"
+                {/* Bottom floating tab bar — NO repeat entrance animation */}
+                <nav
+                    className="lg:hidden fixed bottom-4 left-4 right-4 z-50 flex items-center justify-around"
                     style={{
                         borderRadius: "var(--radius-2xl)",
                         paddingBottom: "max(4px, env(safe-area-inset-bottom))",
                         paddingTop: "4px",
+                        background: theme === "dark" ? "rgba(28,28,30,0.82)" : "rgba(255,255,255,0.82)",
+                        backdropFilter: "blur(60px) saturate(1.8)",
+                        WebkitBackdropFilter: "blur(60px) saturate(1.8)",
+                        border: theme === "dark" ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(0,0,0,0.06)",
+                        boxShadow: theme === "dark"
+                            ? "0 4px 24px rgba(0,0,0,0.5)"
+                            : "0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)",
                     }}
                 >
                     {mobileItems.map((item) => {
@@ -424,9 +442,9 @@ export default function FloatingNavbar() {
                             </button>
                         );
                     })}
-                </motion.nav>
+                </nav>
 
-                {/* Mobile "More" sheet */}
+                {/* Mobile "More" sheet — with backdrop blur */}
                 <AnimatePresence>
                     {mobileMoreOpen && (
                         <>
@@ -436,7 +454,11 @@ export default function FloatingNavbar() {
                                 animate="visible"
                                 exit="exit"
                                 className="lg:hidden fixed inset-0 z-40"
-                                style={{ background: "rgba(0,0,0,0.4)" }}
+                                style={{
+                                    background: "rgba(0,0,0,0.3)",
+                                    backdropFilter: "blur(20px)",
+                                    WebkitBackdropFilter: "blur(20px)",
+                                }}
                                 onClick={() => setMobileMoreOpen(false)}
                             />
                             <motion.div
@@ -444,10 +466,15 @@ export default function FloatingNavbar() {
                                 animate={{ y: 0 }}
                                 exit={{ y: "100%" }}
                                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                                className="lg:hidden fixed bottom-0 left-0 right-0 z-50 glass-surface-elevated"
+                                className="lg:hidden fixed bottom-0 left-0 right-0 z-50"
                                 style={{
                                     borderRadius: "var(--radius-2xl) var(--radius-2xl) 0 0",
                                     paddingBottom: "max(24px, env(safe-area-inset-bottom))",
+                                    background: theme === "dark" ? "rgba(44,44,46,0.92)" : "rgba(255,255,255,0.92)",
+                                    backdropFilter: "blur(60px) saturate(1.8)",
+                                    WebkitBackdropFilter: "blur(60px) saturate(1.8)",
+                                    border: theme === "dark" ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(0,0,0,0.06)",
+                                    boxShadow: "0 -4px 32px rgba(0,0,0,0.15)",
                                 }}
                             >
                                 {/* Drag indicator */}
