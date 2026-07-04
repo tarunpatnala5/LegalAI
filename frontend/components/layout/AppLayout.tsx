@@ -23,10 +23,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         >
             <FloatingNavbar />
 
-            {/* Main content
-                Mobile: pt-[72px] clears the 56px (h-14) fixed mobile top bar + 16px gap
-                Desktop: pt-[100px] clears the floating navbar (~48px + top-5 offset + gap) */}
-            <main className="w-full max-w-screen-xl mx-auto px-5 sm:px-8 lg:px-16 pt-[88px] lg:pt-[100px] pb-28 lg:pb-16">
+            {/*
+                Main content spacing:
+                Mobile:  pt-20 = 80px  (clears 56px h-14 top bar + 24px gap)
+                Desktop: pt-24 = 96px  (clears floating navbar)
+                Bottom:  pb-32 = 128px mobile (clears floating bottom pill)
+                         pb-16 = 64px  desktop
+            */}
+            <main
+                style={{
+                    paddingTop: "clamp(80px, 12vw, 96px)",
+                }}
+                className="w-full max-w-screen-xl mx-auto px-5 sm:px-8 lg:px-16 lg:!pt-24 pb-32 lg:pb-16"
+            >
                 {children}
             </main>
         </div>
