@@ -308,10 +308,9 @@ export default function FloatingNavbar() {
     );
 
     /* ═══════════════════════════════════════════════════
-       MOBILE BOTTOM BAR — Quick Share style
-       Compact centered floating pill. 
-       Each tab: icon + text stacked.
-       Active tab: capsule/pill bg that animates between items.
+       MOBILE BOTTOM BAR — Quick Share exact style
+       Rounded rectangle (not pill), centered, solid bg.
+       Active tab: solid gray capsule behind item.
        ═══════════════════════════════════════════════════ */
     const MobileBottomBar = () => {
         const mobileItems = [
@@ -325,10 +324,13 @@ export default function FloatingNavbar() {
         return (
             <>
                 <nav
-                    className="lg:hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1 px-2 py-2"
+                    className="lg:hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex items-center px-1.5 py-1.5"
                     style={{
-                        borderRadius: 9999,
-                        ...glassPill,
+                        borderRadius: 24,
+                        background: theme === "dark" ? "#1c1c1e" : "#ffffff",
+                        boxShadow: theme === "dark"
+                            ? "0 2px 20px rgba(0,0,0,0.6), 0 0 0 0.5px rgba(255,255,255,0.1)"
+                            : "0 2px 16px rgba(0,0,0,0.1), 0 0 0 0.5px rgba(0,0,0,0.04)",
                     }}
                 >
                     {mobileItems.map((item) => {
@@ -345,20 +347,22 @@ export default function FloatingNavbar() {
                                     if (isMore) setMobileMoreOpen(p => !p);
                                     else { setMobileMoreOpen(false); router.push(item.href); }
                                 }}
-                                className="relative flex flex-col items-center justify-center min-w-[52px] py-1 px-2"
-                                style={{ color: isActive ? "var(--accent)" : "var(--muted-foreground)" }}
+                                className="relative flex flex-col items-center justify-center"
+                                style={{
+                                    width: 58,
+                                    height: 48,
+                                    color: isActive ? "var(--accent)" : "var(--muted-foreground)",
+                                }}
                                 aria-label={item.name}
                             >
-                                {/* Capsule active bg — slides between tabs */}
+                                {/* Solid gray capsule — slides between active tabs */}
                                 {isActive && (
                                     <motion.div
                                         layoutId="mobileActivePill"
-                                        className="absolute inset-0"
+                                        className="absolute inset-0.5"
                                         style={{
-                                            borderRadius: 9999,
-                                            background: theme === "dark"
-                                                ? "rgba(255,255,255,0.1)"
-                                                : "rgba(0,0,0,0.05)",
+                                            borderRadius: 20,
+                                            background: theme === "dark" ? "#2c2c2e" : "#e8e8ed",
                                         }}
                                         transition={{
                                             type: "spring",
@@ -367,8 +371,8 @@ export default function FloatingNavbar() {
                                         }}
                                     />
                                 )}
-                                <Icon className="w-5 h-5 relative z-10" strokeWidth={isActive ? 2 : 1.5} />
-                                <span className="text-[9px] mt-0.5 font-medium relative z-10 leading-tight">{item.name}</span>
+                                <Icon className="w-[21px] h-[21px] relative z-10" strokeWidth={isActive ? 2 : 1.5} />
+                                <span className="text-[10px] mt-0.5 font-medium relative z-10 leading-tight">{item.name}</span>
                             </button>
                         );
                     })}

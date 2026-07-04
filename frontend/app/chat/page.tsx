@@ -348,8 +348,7 @@ export default function ChatPage() {
             className="flex flex-col lg:flex-row gap-0 lg:gap-4 overflow-hidden"
             style={{
                 borderRadius: 16,
-                height: "calc(100vh - 10rem)",
-                maxHeight: "calc(100dvh - 10rem)",
+                height: "calc(100dvh - 11rem)",
             }}
         >
             {/* Delete Conversation Confirmation Modal */}
