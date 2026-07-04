@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence, useMotionValueEvent, useScroll } from "framer-motion";
 import {
     Home, MessageSquare, PlusCircle, Library, Calendar,
-    Settings, Scale, LogOut, LogIn, Users, Bell, Sun, Moon, X,
+    Settings, Scale, LogOut, LogIn, Users, Bell, Sun, Moon, X, MoreHorizontal,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
@@ -140,17 +140,6 @@ export default function FloatingNavbar() {
         ...(user?.is_admin ? [adminItem] : []),
     ];
 
-    /* ── Shared blur style ────────────────────────────── */
-    const glassStyle = {
-        background: theme === "dark" ? "rgba(28,28,30,0.78)" : "rgba(255,255,255,0.78)",
-        backdropFilter: "blur(60px) saturate(1.8)",
-        WebkitBackdropFilter: "blur(60px) saturate(1.8)",
-        border: theme === "dark" ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(0,0,0,0.08)",
-        boxShadow: theme === "dark"
-            ? "0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3)"
-            : "0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)",
-    };
-
     /* ── Desktop Navbar — Netflix TV style ────────────── */
     const DesktopNav = () => (
         <motion.header
@@ -163,21 +152,23 @@ export default function FloatingNavbar() {
             className="hidden lg:flex fixed top-5 left-1/2 -translate-x-1/2 z-50 items-center gap-1 px-3 py-2"
             style={{
                 borderRadius: 22,
-                ...glassStyle,
+                background: theme === "dark" ? "rgba(28,28,30,0.78)" : "rgba(255,255,255,0.78)",
+                backdropFilter: "blur(60px) saturate(1.8)",
+                WebkitBackdropFilter: "blur(60px) saturate(1.8)",
+                border: theme === "dark" ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(0,0,0,0.08)",
+                boxShadow: theme === "dark"
+                    ? "0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3)"
+                    : "0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)",
             }}
         >
             {/* Logo */}
-            <Link
-                href="/"
-                className="flex items-center gap-2 px-3 py-1.5 mr-1 shrink-0"
-            >
+            <Link href="/" className="flex items-center gap-2 px-3 py-1.5 mr-1 shrink-0">
                 <Scale className="w-5 h-5 shrink-0" style={{ color: "var(--accent)" }} />
                 <span className="font-display font-semibold text-[15px] tracking-tight whitespace-nowrap" style={{ color: "var(--foreground)" }}>
                     Legal AI
                 </span>
             </Link>
 
-            {/* Separator */}
             <div className="w-px h-5 shrink-0" style={{ background: "var(--separator)" }} />
 
             {/* Nav Items — Netflix TV style */}
@@ -211,12 +202,10 @@ export default function FloatingNavbar() {
                 })}
             </nav>
 
-            {/* Separator */}
             <div className="w-px h-5 shrink-0" style={{ background: "var(--separator)" }} />
 
             {/* Right actions */}
             <div className="flex items-center gap-0.5 ml-1">
-                {/* Theme toggle */}
                 <button
                     onClick={toggleTheme}
                     className="p-2 rounded-full transition-colors duration-150"
@@ -226,7 +215,6 @@ export default function FloatingNavbar() {
                     {theme === "dark" ? <Sun className="w-4 h-4" strokeWidth={1.5} /> : <Moon className="w-4 h-4" strokeWidth={1.5} />}
                 </button>
 
-                {/* Notifications */}
                 {isLoggedIn && (
                     <div ref={notificationsRef} className="relative">
                         <button
@@ -237,10 +225,7 @@ export default function FloatingNavbar() {
                         >
                             <Bell className="w-4 h-4" strokeWidth={1.5} />
                             {notifications.length > 0 && (
-                                <span
-                                    className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full"
-                                    style={{ background: "var(--destructive)" }}
-                                />
+                                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full" style={{ background: "var(--destructive)" }} />
                             )}
                         </button>
 
@@ -262,23 +247,15 @@ export default function FloatingNavbar() {
                                     }}
                                 >
                                     <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--separator)" }}>
-                                        <h3 className="font-semibold text-sm" style={{ color: "var(--foreground)" }}>
-                                            Upcoming Events
-                                        </h3>
+                                        <h3 className="font-semibold text-sm" style={{ color: "var(--foreground)" }}>Upcoming Events</h3>
                                         <p className="text-xs mt-0.5" style={{ color: "var(--muted-foreground)" }}>Next 24 hours</p>
                                     </div>
                                     <div className="max-h-64 overflow-y-auto">
                                         {notifications.length === 0 ? (
-                                            <div className="px-5 py-6 text-center text-sm" style={{ color: "var(--muted-foreground)" }}>
-                                                No upcoming events
-                                            </div>
+                                            <div className="px-5 py-6 text-center text-sm" style={{ color: "var(--muted-foreground)" }}>No upcoming events</div>
                                         ) : (
                                             notifications.map(n => (
-                                                <div
-                                                    key={n.id}
-                                                    className="px-5 py-3 transition-colors duration-150"
-                                                    style={{ borderBottom: "1px solid var(--separator)" }}
-                                                >
+                                                <div key={n.id} className="px-5 py-3" style={{ borderBottom: "1px solid var(--separator)" }}>
                                                     <div className="text-sm font-medium" style={{ color: "var(--foreground)" }}>{n.case_name}</div>
                                                     <div className="text-xs mt-0.5" style={{ color: "var(--muted-foreground)" }}>
                                                         {new Date(n.court_date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
@@ -293,20 +270,13 @@ export default function FloatingNavbar() {
                     </div>
                 )}
 
-                {/* User / Login — consistent radius with parent bar */}
                 {isLoggedIn ? (
                     <button
                         onClick={() => router.push("/settings")}
                         className="ml-1 flex items-center gap-2 pl-1 pr-3 py-1 shrink-0 transition-all duration-200"
-                        style={{
-                            borderRadius: 14,
-                            border: "1px solid var(--separator)",
-                        }}
+                        style={{ borderRadius: 14, border: "1px solid var(--separator)" }}
                     >
-                        <div
-                            className="w-7 h-7 rounded-full flex items-center justify-center text-white font-medium text-xs shrink-0"
-                            style={{ background: "var(--accent)" }}
-                        >
+                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-white font-medium text-xs shrink-0" style={{ background: "var(--accent)" }}>
                             {initials}
                         </div>
                         <span className="text-[13px] font-medium hidden xl:block whitespace-nowrap" style={{ color: "var(--foreground)" }}>
@@ -327,19 +297,19 @@ export default function FloatingNavbar() {
         </motion.header>
     );
 
-    /* ── Mobile Bottom Nav — Apple Music style ────────── */
+    /* ── Mobile Nav ───────────────────────────────────── */
     const MobileNav = () => {
         const mobileItems = [
             navItems[0], // Home
             navItems[1], // Chat
             navItems[2], // New Case
             navItems[3], // Library
-            { name: "More", href: "#more", icon: Settings },
+            { name: "More", href: "#more", icon: MoreHorizontal },
         ];
 
         return (
             <>
-                {/* Mobile top bar */}
+                {/* Mobile top bar — edge-to-edge frosted glass */}
                 <div
                     className="lg:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-5 h-14"
                     style={{
@@ -355,74 +325,51 @@ export default function FloatingNavbar() {
                             Legal AI
                         </span>
                     </Link>
-
                     <div className="flex items-center gap-1">
-                        <button
-                            onClick={toggleTheme}
-                            className="p-2.5 rounded-full"
-                            style={{ color: "var(--muted-foreground)" }}
-                            aria-label="Toggle theme"
-                        >
+                        <button onClick={toggleTheme} className="p-2.5 rounded-full" style={{ color: "var(--muted-foreground)" }} aria-label="Toggle theme">
                             {theme === "dark" ? <Sun className="w-[18px] h-[18px]" strokeWidth={1.5} /> : <Moon className="w-[18px] h-[18px]" strokeWidth={1.5} />}
                         </button>
-
                         {isLoggedIn && (
                             <div ref={notificationsRef} className="relative">
-                                <button
-                                    onClick={() => setNotificationsOpen(prev => !prev)}
-                                    className="p-2.5 rounded-full relative"
-                                    style={{ color: "var(--muted-foreground)" }}
-                                    aria-label="Notifications"
-                                >
+                                <button onClick={() => setNotificationsOpen(prev => !prev)} className="p-2.5 rounded-full relative" style={{ color: "var(--muted-foreground)" }} aria-label="Notifications">
                                     <Bell className="w-[18px] h-[18px]" strokeWidth={1.5} />
-                                    {notifications.length > 0 && (
-                                        <span
-                                            className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full"
-                                            style={{ background: "var(--destructive)" }}
-                                        />
-                                    )}
+                                    {notifications.length > 0 && <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full" style={{ background: "var(--destructive)" }} />}
                                 </button>
                             </div>
                         )}
-
                         {isLoggedIn ? (
-                            <button
-                                onClick={() => router.push("/settings")}
-                                className="w-8 h-8 rounded-full flex items-center justify-center text-white font-medium text-xs shrink-0"
-                                style={{ background: "var(--accent)" }}
-                            >
+                            <button onClick={() => router.push("/settings")} className="w-8 h-8 rounded-full flex items-center justify-center text-white font-medium text-xs shrink-0" style={{ background: "var(--accent)" }}>
                                 {initials}
                             </button>
                         ) : (
-                            <Link
-                                href="/auth/login"
-                                className="p-2.5 rounded-full"
-                                style={{ color: "var(--accent)" }}
-                            >
+                            <Link href="/auth/login" className="p-2.5 rounded-full" style={{ color: "var(--accent)" }}>
                                 <LogIn className="w-[18px] h-[18px]" strokeWidth={1.5} />
                             </Link>
                         )}
                     </div>
                 </div>
 
-                {/* Bottom floating tab bar — Apple Music style with individual rounded items */}
+                {/*
+                    Bottom tab bar — Apple Music TV style
+                    Each tab is an individual squircle/circle.
+                    The active tab gets a tinted background with a smooth layoutId animation.
+                */}
                 <nav
-                    className="lg:hidden fixed bottom-4 left-4 right-4 z-50 flex items-center justify-around px-2 py-2"
+                    className="lg:hidden fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around px-3"
                     style={{
-                        borderRadius: 20,
-                        background: theme === "dark" ? "rgba(28,28,30,0.82)" : "rgba(255,255,255,0.82)",
+                        paddingTop: 8,
+                        paddingBottom: "max(10px, env(safe-area-inset-bottom))",
+                        background: theme === "dark" ? "rgba(0,0,0,0.72)" : "rgba(255,255,255,0.72)",
                         backdropFilter: "blur(60px) saturate(1.8)",
                         WebkitBackdropFilter: "blur(60px) saturate(1.8)",
-                        border: theme === "dark" ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(0,0,0,0.06)",
-                        boxShadow: theme === "dark"
-                            ? "0 4px 24px rgba(0,0,0,0.5)"
-                            : "0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)",
-                        paddingBottom: "max(8px, env(safe-area-inset-bottom))",
+                        borderTop: theme === "dark" ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(0,0,0,0.06)",
                     }}
                 >
                     {mobileItems.map((item) => {
                         const isMore = item.href === "#more";
-                        const isActive = isMore ? mobileMoreOpen : (pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href)));
+                        const isActive = isMore
+                            ? mobileMoreOpen
+                            : (pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href)));
                         const Icon = item.icon;
 
                         return (
@@ -436,25 +383,36 @@ export default function FloatingNavbar() {
                                         router.push(item.href);
                                     }
                                 }}
-                                className="flex flex-col items-center justify-center min-w-[52px] min-h-[46px] transition-all duration-200"
-                                style={{
-                                    borderRadius: 14,
-                                    padding: "6px 10px",
-                                    color: isActive ? "var(--accent)" : "var(--muted-foreground)",
-                                    background: isActive
-                                        ? (theme === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,113,227,0.06)")
-                                        : "transparent",
-                                }}
+                                className="relative flex flex-col items-center justify-center w-[56px] h-[50px]"
+                                style={{ color: isActive ? "var(--accent)" : "var(--muted-foreground)" }}
                                 aria-label={item.name}
                             >
-                                <Icon className="w-[20px] h-[20px]" strokeWidth={isActive ? 2 : 1.5} />
-                                <span className="text-[10px] mt-0.5 font-medium">{item.name}</span>
+                                {/* Animated circle background — slides between active tabs */}
+                                {isActive && (
+                                    <motion.div
+                                        layoutId="mobileActiveTab"
+                                        className="absolute inset-1"
+                                        style={{
+                                            borderRadius: 16,
+                                            background: theme === "dark"
+                                                ? "rgba(0,113,227,0.15)"
+                                                : "rgba(0,113,227,0.08)",
+                                        }}
+                                        transition={{
+                                            type: "spring",
+                                            stiffness: 380,
+                                            damping: 32,
+                                        }}
+                                    />
+                                )}
+                                <Icon className="w-[22px] h-[22px] relative z-10" strokeWidth={isActive ? 2 : 1.5} />
+                                <span className="text-[10px] mt-0.5 font-medium relative z-10">{item.name}</span>
                             </button>
                         );
                     })}
                 </nav>
 
-                {/* Mobile "More" sheet — with backdrop blur */}
+                {/* Mobile "More" sheet */}
                 <AnimatePresence>
                     {mobileMoreOpen && (
                         <>
@@ -487,11 +445,9 @@ export default function FloatingNavbar() {
                                     boxShadow: "0 -4px 32px rgba(0,0,0,0.15)",
                                 }}
                             >
-                                {/* Drag indicator */}
                                 <div className="flex justify-center py-3">
                                     <div className="w-9 h-1 rounded-full" style={{ background: "var(--separator)" }} />
                                 </div>
-
                                 <div className="px-4 pb-4 space-y-1">
                                     {[settingsItem, { name: "Schedule", href: "/schedule", icon: Calendar }, ...(user?.is_admin ? [adminItem] : [])].map((item) => {
                                         const isActive = pathname === item.href;
@@ -527,7 +483,6 @@ export default function FloatingNavbar() {
                                             </button>
                                         </>
                                     )}
-
                                     {!isLoggedIn && (
                                         <>
                                             <div className="my-2" style={{ borderTop: "1px solid var(--separator)" }} />
