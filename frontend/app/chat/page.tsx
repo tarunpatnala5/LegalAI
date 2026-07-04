@@ -46,7 +46,7 @@ export default function ChatPage() {
     }, [isLoggedIn]);
 
     useEffect(() => {
-        scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+        scrollRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }, [messages]);
 
     const fetchSessions = async () => {
@@ -345,10 +345,9 @@ export default function ChatPage() {
 
     return (
         <div
-            className="flex flex-col lg:flex-row gap-0 lg:gap-4 overflow-hidden"
+            className="flex flex-col lg:flex-row gap-0 lg:gap-4 overflow-hidden h-[calc(100svh-11rem)] lg:h-[calc(100dvh-12rem)]"
             style={{
                 borderRadius: 16,
-                height: "calc(100dvh - 12rem)",
             }}
         >
             {/* Delete Conversation Confirmation Modal */}
