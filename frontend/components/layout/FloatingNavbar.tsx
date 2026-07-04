@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence, useMotionValueEvent, useScroll } from "framer-motion";
 import {
     Home, MessageSquare, PlusCircle, Library, Calendar,
-    Settings, Scale, LogOut, LogIn, Users, Bell, Sun, Moon,
+    Settings, Scale, LogOut, LogIn, Users, Bell, Sun, Moon, MoreHorizontal,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuth } from "@/lib/auth-context";
@@ -324,31 +324,43 @@ export default function FloatingNavbar() {
             navItems[1], // Chat
             navItems[2], // New Case
             navItems[3], // Library
+            { name: "More", href: "#more", icon: MoreHorizontal },
         ];
 
         return (
             <>
-                {/* Full-width, edge-to-edge native-style tab bar (iOS/GitHub app pattern) */}
                 <nav
-                    className="lg:hidden fixed bottom-0 left-0 right-0 z-50 flex items-stretch"
+                    className="lg:hidden fixed left-1/2 -translate-x-1/2 z-50 flex items-center"
                     style={{
-                        paddingBottom: "env(safe-area-inset-bottom)",
-                        background: theme === "dark" ? "#1c1c1e" : "#ffffff",
-                        borderTop: theme === "dark" ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(0,0,0,0.08)",
-                        boxShadow: theme === "dark" ? "0 -2px 16px rgba(0,0,0,0.35)" : "0 -2px 16px rgba(0,0,0,0.05)",
+                        bottom: "max(20px, env(safe-area-inset-bottom))",
+                        height: 64,
+                        padding: "0 6px",
+                        borderRadius: 32,
+                        background: theme === "dark" ? "#232326" : "#ffffff",
+                        border: theme === "dark" ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(0,0,0,0.05)",
+                        boxShadow: theme === "dark"
+                            ? "0 6px 20px rgba(0,0,0,0.4)"
+                            : "0 4px 18px rgba(0,0,0,0.10)",
                     }}
                 >
                     {mobileItems.map((item) => {
-                        const isActive = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href));
+                        const isMore = item.href === "#more";
+                        const isActive = isMore
+                            ? mobileMoreOpen
+                            : (pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href)));
                         const Icon = item.icon;
                         return (
                             <button
                                 key={item.href}
-                                onClick={() => { setMobileMoreOpen(false); router.push(item.href); }}
-                                className="relative flex-1 flex flex-col items-center justify-center gap-0.5"
+                                onClick={() => {
+                                    if (isMore) setMobileMoreOpen(p => !p);
+                                    else { setMobileMoreOpen(false); router.push(item.href); }
+                                }}
+                                className="relative flex flex-col items-center justify-center gap-0.5"
                                 style={{
-                                    height: 56,
-                                    color: isActive ? "var(--accent)" : (theme === "dark" ? "rgba(235,235,240,0.5)" : "rgba(60,60,67,0.6)"),
+                                    width: 60,
+                                    height: 52,
+                                    color: isActive ? "var(--accent)" : (theme === "dark" ? "rgba(235,235,240,0.55)" : "rgba(30,30,32,0.4)"),
                                 }}
                                 aria-label={item.name}
                             >
@@ -357,11 +369,9 @@ export default function FloatingNavbar() {
                                         layoutId="mobileActivePill"
                                         className="absolute"
                                         style={{
-                                            top: 5,
-                                            width: 40,
-                                            height: 22,
-                                            borderRadius: 8,
-                                            background: theme === "dark" ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.06)",
+                                            inset: "2px 3px",
+                                            borderRadius: 24,
+                                            background: theme === "dark" ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.07)",
                                         }}
                                         transition={{ type: "spring", stiffness: 420, damping: 32 }}
                                     />
@@ -371,31 +381,6 @@ export default function FloatingNavbar() {
                             </button>
                         );
                     })}
-
-                    {/* Account avatar — separate circular button, opens the More sheet
-                        (Settings, Schedule, Admin, Sign out/in), mirroring the
-                        profile-avatar bubble at the end of the reference tab bar. */}
-                    <button
-                        onClick={() => setMobileMoreOpen(p => !p)}
-                        className="flex flex-col items-center justify-center px-4"
-                        style={{ height: 56 }}
-                        aria-label="Account"
-                    >
-                        <div
-                            className="w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-semibold transition-colors"
-                            style={{
-                                background: mobileMoreOpen
-                                    ? "var(--accent)"
-                                    : (theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)"),
-                                color: mobileMoreOpen
-                                    ? "#fff"
-                                    : (theme === "dark" ? "rgba(235,235,240,0.7)" : "rgba(60,60,67,0.7)"),
-                                border: theme === "dark" ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(0,0,0,0.08)",
-                            }}
-                        >
-                            {isLoggedIn ? initials : <Users className="w-4 h-4" strokeWidth={1.8} />}
-                        </div>
-                    </button>
                 </nav>
                 {/* More sheet */}
                 <AnimatePresence>
