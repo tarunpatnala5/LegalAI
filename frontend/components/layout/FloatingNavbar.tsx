@@ -308,9 +308,9 @@ export default function FloatingNavbar() {
     );
 
     /* ═══════════════════════════════════════════════════
-       MOBILE BOTTOM BAR — Quick Share exact style
-       Rounded rectangle (not pill), centered, solid bg.
-       Active tab: solid gray capsule behind item.
+       MOBILE BOTTOM BAR — Quick Share style
+       Rounded rectangle, centered, solid bg.
+       Active tab: solid gray capsule that slides between items.
        ═══════════════════════════════════════════════════ */
     const MobileBottomBar = () => {
         const mobileItems = [
@@ -324,13 +324,13 @@ export default function FloatingNavbar() {
         return (
             <>
                 <nav
-                    className="lg:hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex items-center px-1.5 py-1.5"
+                    className="lg:hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex items-center px-2 py-2"
                     style={{
-                        borderRadius: 24,
+                        borderRadius: 28,
                         background: theme === "dark" ? "#1c1c1e" : "#ffffff",
                         boxShadow: theme === "dark"
-                            ? "0 2px 20px rgba(0,0,0,0.6), 0 0 0 0.5px rgba(255,255,255,0.1)"
-                            : "0 2px 16px rgba(0,0,0,0.1), 0 0 0 0.5px rgba(0,0,0,0.04)",
+                            ? "0 4px 24px rgba(0,0,0,0.6), 0 0 0 0.5px rgba(255,255,255,0.1)"
+                            : "0 2px 20px rgba(0,0,0,0.12), 0 0 0 0.5px rgba(0,0,0,0.04)",
                     }}
                 >
                     {mobileItems.map((item) => {
@@ -349,8 +349,8 @@ export default function FloatingNavbar() {
                                 }}
                                 className="relative flex flex-col items-center justify-center"
                                 style={{
-                                    width: 58,
-                                    height: 48,
+                                    width: 64,
+                                    height: 54,
                                     color: isActive ? "var(--accent)" : "var(--muted-foreground)",
                                 }}
                                 aria-label={item.name}
@@ -359,9 +359,10 @@ export default function FloatingNavbar() {
                                 {isActive && (
                                     <motion.div
                                         layoutId="mobileActivePill"
-                                        className="absolute inset-0.5"
+                                        className="absolute"
                                         style={{
-                                            borderRadius: 20,
+                                            inset: 2,
+                                            borderRadius: 22,
                                             background: theme === "dark" ? "#2c2c2e" : "#e8e8ed",
                                         }}
                                         transition={{
@@ -371,7 +372,7 @@ export default function FloatingNavbar() {
                                         }}
                                     />
                                 )}
-                                <Icon className="w-[21px] h-[21px] relative z-10" strokeWidth={isActive ? 2 : 1.5} />
+                                <Icon className="w-6 h-6 relative z-10" strokeWidth={isActive ? 2 : 1.5} />
                                 <span className="text-[10px] mt-0.5 font-medium relative z-10 leading-tight">{item.name}</span>
                             </button>
                         );
