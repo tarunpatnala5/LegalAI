@@ -24,13 +24,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <FloatingNavbar />
 
             {/*
-                Spacer approach for mobile top bar clearance.
-                Mobile top bar = h-14 (56px), fixed at top-0.
-                We use a 72px spacer (56px bar + 16px gap) + pt-4 (16px) in main = 88px total.
-                Desktop floating nav ≈ 48px + 16px top offset = ~64px.
-                We use 80px spacer + pt-6 (24px) = 104px total.
+                Mobile: the top bar is `sticky` (see FloatingNavbar), so it lives
+                in normal document flow and always pushes page content down by
+                its own real height — no manual spacer to keep in sync, and no
+                risk of content rendering underneath it.
+
+                Desktop: the nav is a centered floating pill using `fixed`
+                positioning (it doesn't span full width, so it can't be sticky
+                the same way), so it still needs an explicit spacer below it.
             */}
-            <div className="lg:hidden" style={{ height: 72 }} aria-hidden="true" />
             <div className="hidden lg:block" style={{ height: 80 }} aria-hidden="true" />
 
             <main className="w-full max-w-screen-xl mx-auto px-5 sm:px-8 lg:px-16 pt-4 lg:pt-6 pb-28 lg:pb-16">

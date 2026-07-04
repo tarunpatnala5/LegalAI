@@ -266,12 +266,16 @@ export default function FloatingNavbar() {
     );
 
     /* ═══════════════════════════════════════════════════
-       MOBILE TOP BAR — simple frosted glass status bar
+       MOBILE TOP BAR — sticky (not fixed) frosted glass bar.
+       Sticky keeps it permanently in normal document flow, so
+       page content can never render underneath/behind it — no
+       manual spacer height to keep in sync anymore.
        ═══════════════════════════════════════════════════ */
     const MobileTopBar = () => (
         <div
-            className="lg:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 h-14"
+            className="lg:hidden sticky top-0 left-0 right-0 z-40 flex items-center justify-between px-4 h-14"
             style={{
+                paddingTop: "env(safe-area-inset-top)",
                 background: theme === "dark" ? "rgba(0,0,0,0.72)" : "rgba(255,255,255,0.72)",
                 backdropFilter: "blur(40px) saturate(1.6)",
                 WebkitBackdropFilter: "blur(40px) saturate(1.6)",
@@ -324,15 +328,37 @@ export default function FloatingNavbar() {
         return (
             <>
                 <nav
-                    className="lg:hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex items-center px-2 py-2"
+                    className="lg:hidden fixed left-1/2 -translate-x-1/2 z-50 flex items-center px-2 py-2 overflow-hidden"
                     style={{
-                        borderRadius: 28,
-                        background: theme === "dark" ? "#1c1c1e" : "#ffffff",
+                        bottom: "max(20px, env(safe-area-inset-bottom))",
+                        borderRadius: 30,
+                        /* Apple Music–style liquid glass: translucent, heavily
+                           blurred so whatever is scrolling underneath bleeds
+                           through in soft color, instead of a solid opaque bar. */
+                        background: theme === "dark"
+                            ? "rgba(40,40,44,0.42)"
+                            : "rgba(255,255,255,0.45)",
+                        backdropFilter: "blur(34px) saturate(2.2)",
+                        WebkitBackdropFilter: "blur(34px) saturate(2.2)",
+                        border: theme === "dark"
+                            ? "0.5px solid rgba(255,255,255,0.22)"
+                            : "0.5px solid rgba(255,255,255,0.8)",
                         boxShadow: theme === "dark"
-                            ? "0 4px 24px rgba(0,0,0,0.6), 0 0 0 0.5px rgba(255,255,255,0.1)"
-                            : "0 2px 20px rgba(0,0,0,0.12), 0 0 0 0.5px rgba(0,0,0,0.04)",
+                            ? "0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08)"
+                            : "0 8px 28px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,0.6)",
                     }}
                 >
+                    {/* Subtle top highlight sheen — the glassy catch-light iOS 26 style bars have */}
+                    <div
+                        className="pointer-events-none absolute inset-x-0 top-0"
+                        style={{
+                            height: "50%",
+                            borderRadius: "30px 30px 100px 100px",
+                            background: theme === "dark"
+                                ? "linear-gradient(to bottom, rgba(255,255,255,0.10), rgba(255,255,255,0))"
+                                : "linear-gradient(to bottom, rgba(255,255,255,0.55), rgba(255,255,255,0))",
+                        }}
+                    />
                     {mobileItems.map((item) => {
                         const isMore = item.href === "#more";
                         const isActive = isMore
@@ -355,7 +381,7 @@ export default function FloatingNavbar() {
                                 }}
                                 aria-label={item.name}
                             >
-                                {/* Solid gray capsule — slides between active tabs */}
+                                {/* Frosted capsule — slides between active tabs */}
                                 {isActive && (
                                     <motion.div
                                         layoutId="mobileActivePill"
@@ -363,7 +389,14 @@ export default function FloatingNavbar() {
                                         style={{
                                             inset: 2,
                                             borderRadius: 22,
-                                            background: theme === "dark" ? "#2c2c2e" : "#e8e8ed",
+                                            background: theme === "dark"
+                                                ? "rgba(255,255,255,0.14)"
+                                                : "rgba(255,255,255,0.65)",
+                                            backdropFilter: "blur(10px)",
+                                            WebkitBackdropFilter: "blur(10px)",
+                                            boxShadow: theme === "dark"
+                                                ? "inset 0 1px 0 rgba(255,255,255,0.15)"
+                                                : "inset 0 1px 0 rgba(255,255,255,0.9), 0 1px 4px rgba(0,0,0,0.06)",
                                         }}
                                         transition={{
                                             type: "spring",
