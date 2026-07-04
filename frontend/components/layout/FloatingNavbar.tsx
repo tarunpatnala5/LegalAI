@@ -312,13 +312,11 @@ export default function FloatingNavbar() {
     );
 
     /* ═══════════════════════════════════════════════════
-       MOBILE BOTTOM BAR — compact tab pill + accent FAB,
-       matching the reference: a solid, content-sized pill
-       (not stretched edge-to-edge) that holds the tabs, with
-       a separate circular button in the app's own accent
-       color sitting apart from it — same shape language as
-       the pill (fully rounded), same colors as the rest of
-       the app's UI (accent blue), not a generic gray icon.
+       MOBILE BOTTOM BAR — single unified pill.
+       All items live in one solid, content-sized pill (not
+       stretched edge-to-edge). The active item gets a solid
+       gray capsule behind it, like the highlight visible
+       behind the active tab in the reference screenshots.
        ═══════════════════════════════════════════════════ */
     const MobileBottomBar = () => {
         const mobileItems = [
@@ -326,74 +324,64 @@ export default function FloatingNavbar() {
             navItems[1], // Chat
             navItems[2], // New Case
             navItems[3], // Library
+            { name: "More", href: "#more", icon: MoreHorizontal },
         ];
-
-        const pillSurface = {
-            background: theme === "dark" ? "#232326" : "#ffffff",
-            border: theme === "dark" ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(0,0,0,0.05)",
-            boxShadow: theme === "dark"
-                ? "0 6px 20px rgba(0,0,0,0.4)"
-                : "0 4px 18px rgba(0,0,0,0.10)",
-        };
 
         return (
             <>
-                <div
-                    className="lg:hidden fixed left-0 right-0 z-50 flex items-center justify-between px-6"
-                    style={{ bottom: "max(20px, env(safe-area-inset-bottom))" }}
+                <nav
+                    className="lg:hidden fixed left-1/2 -translate-x-1/2 z-50 flex items-center"
+                    style={{
+                        bottom: "max(20px, env(safe-area-inset-bottom))",
+                        height: 64,
+                        padding: "0 6px",
+                        borderRadius: 32,
+                        background: theme === "dark" ? "#232326" : "#ffffff",
+                        border: theme === "dark" ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(0,0,0,0.05)",
+                        boxShadow: theme === "dark"
+                            ? "0 6px 20px rgba(0,0,0,0.4)"
+                            : "0 4px 18px rgba(0,0,0,0.10)",
+                    }}
                 >
-                    {/* Primary tabs — compact pill, sized to its content */}
-                    <nav
-                        className="flex items-center"
-                        style={{
-                            height: 62,
-                            padding: "0 6px",
-                            borderRadius: 31,
-                            ...pillSurface,
-                        }}
-                    >
-                        {mobileItems.map((item) => {
-                            const isActive = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href));
-                            const Icon = item.icon;
-                            return (
-                                <button
-                                    key={item.href}
-                                    onClick={() => { setMobileMoreOpen(false); router.push(item.href); }}
-                                    className="flex flex-col items-center justify-center gap-0.5"
-                                    style={{
-                                        width: 60,
-                                        height: 50,
-                                        color: isActive ? "var(--accent)" : (theme === "dark" ? "rgba(235,235,240,0.55)" : "rgba(30,30,32,0.4)"),
-                                    }}
-                                    aria-label={item.name}
-                                >
-                                    <Icon className="w-[22px] h-[22px]" strokeWidth={isActive ? 2.2 : 1.6} />
-                                    <span className="text-[10px] font-medium leading-tight">{item.name}</span>
-                                </button>
-                            );
-                        })}
-                    </nav>
-
-                    {/* Detached circular FAB — filled with the app's own accent color */}
-                    <button
-                        onClick={() => setMobileMoreOpen(p => !p)}
-                        className="flex items-center justify-center shrink-0"
-                        style={{
-                            width: 62,
-                            height: 62,
-                            borderRadius: "50%",
-                            background: "var(--accent)",
-                            color: "#ffffff",
-                            boxShadow: theme === "dark"
-                                ? "0 6px 20px rgba(0,0,0,0.45)"
-                                : "0 4px 16px rgba(0,0,0,0.18)",
-                        }}
-                        aria-label="More"
-                    >
-                        <MoreHorizontal className="w-[22px] h-[22px]" strokeWidth={mobileMoreOpen ? 2.1 : 1.6} />
-                    </button>
-                </div>
-
+                    {mobileItems.map((item) => {
+                        const isMore = item.href === "#more";
+                        const isActive = isMore
+                            ? mobileMoreOpen
+                            : (pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href)));
+                        const Icon = item.icon;
+                        return (
+                            <button
+                                key={item.href}
+                                onClick={() => {
+                                    if (isMore) setMobileMoreOpen(p => !p);
+                                    else { setMobileMoreOpen(false); router.push(item.href); }
+                                }}
+                                className="relative flex flex-col items-center justify-center gap-0.5"
+                                style={{
+                                    width: 60,
+                                    height: 52,
+                                    color: isActive ? "var(--accent)" : (theme === "dark" ? "rgba(235,235,240,0.55)" : "rgba(30,30,32,0.4)"),
+                                }}
+                                aria-label={item.name}
+                            >
+                                {isActive && (
+                                    <motion.div
+                                        layoutId="mobileActivePill"
+                                        className="absolute"
+                                        style={{
+                                            inset: "2px 3px",
+                                            borderRadius: 24,
+                                            background: theme === "dark" ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.07)",
+                                        }}
+                                        transition={{ type: "spring", stiffness: 420, damping: 32 }}
+                                    />
+                                )}
+                                <Icon className="w-[22px] h-[22px] relative z-10" strokeWidth={isActive ? 2.2 : 1.6} />
+                                <span className="text-[10px] font-medium relative z-10 leading-tight">{item.name}</span>
+                            </button>
+                        );
+                    })}
+                </nav>
                 {/* More sheet */}
                 <AnimatePresence>
                     {mobileMoreOpen && (
@@ -485,4 +473,3 @@ export default function FloatingNavbar() {
         </>
     );
 }
-{ }
