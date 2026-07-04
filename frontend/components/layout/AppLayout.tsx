@@ -26,7 +26,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             {/* Main content
                 Mobile: pt-[72px] clears the 56px (h-14) fixed mobile top bar + 16px gap
                 Desktop: pt-[100px] clears the floating navbar (~48px + top-5 offset + gap) */}
-            <main className="w-full max-w-screen-xl mx-auto px-5 sm:px-8 lg:px-16 pt-[72px] lg:pt-[100px] pb-24 lg:pb-16">
+            <main className="w-full max-w-screen-xl mx-auto px-5 sm:px-8 lg:px-16 pt-[88px] lg:pt-[100px] pb-28 lg:pb-16">
                 {children}
             </main>
         </div>

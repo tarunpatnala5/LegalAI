@@ -350,19 +350,21 @@ export default function FloatingNavbar() {
                 </div>
 
                 {/*
-                    Bottom tab bar — Apple Music TV style
-                    Each tab is an individual squircle/circle.
-                    The active tab gets a tinted background with a smooth layoutId animation.
+                    Bottom tab bar — Apple Music style
+                    Floating rounded bar with each tab as a visible individual circle.
+                    Active tab gets accent-tinted circle with animated layoutId.
                 */}
                 <nav
-                    className="lg:hidden fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around px-3"
+                    className="lg:hidden fixed bottom-4 left-4 right-4 z-50 flex items-center justify-around px-2 py-2"
                     style={{
-                        paddingTop: 8,
-                        paddingBottom: "max(10px, env(safe-area-inset-bottom))",
-                        background: theme === "dark" ? "rgba(0,0,0,0.72)" : "rgba(255,255,255,0.72)",
+                        borderRadius: 28,
+                        background: theme === "dark" ? "rgba(28,28,30,0.85)" : "rgba(255,255,255,0.85)",
                         backdropFilter: "blur(60px) saturate(1.8)",
                         WebkitBackdropFilter: "blur(60px) saturate(1.8)",
-                        borderTop: theme === "dark" ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(0,0,0,0.06)",
+                        border: theme === "dark" ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(0,0,0,0.06)",
+                        boxShadow: theme === "dark"
+                            ? "0 8px 32px rgba(0,0,0,0.6)"
+                            : "0 4px 24px rgba(0,0,0,0.1), 0 1px 4px rgba(0,0,0,0.04)",
                     }}
                 >
                     {mobileItems.map((item) => {
@@ -383,30 +385,49 @@ export default function FloatingNavbar() {
                                         router.push(item.href);
                                     }
                                 }}
-                                className="relative flex flex-col items-center justify-center w-[56px] h-[50px]"
-                                style={{ color: isActive ? "var(--accent)" : "var(--muted-foreground)" }}
+                                className="relative flex flex-col items-center justify-center"
+                                style={{
+                                    width: 56,
+                                    height: 56,
+                                    color: isActive ? "var(--accent)" : "var(--muted-foreground)",
+                                }}
                                 aria-label={item.name}
                             >
-                                {/* Animated circle background — slides between active tabs */}
+                                {/* Each tab has a visible circle — active gets colored, inactive gets subtle */}
+                                <div
+                                    className="absolute flex items-center justify-center transition-all duration-300"
+                                    style={{
+                                        width: 48,
+                                        height: 48,
+                                        borderRadius: 18,
+                                        background: isActive
+                                            ? (theme === "dark" ? "rgba(0,113,227,0.2)" : "rgba(0,113,227,0.1)")
+                                            : (theme === "dark" ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.03)"),
+                                        border: isActive
+                                            ? (theme === "dark" ? "1.5px solid rgba(0,113,227,0.3)" : "1.5px solid rgba(0,113,227,0.15)")
+                                            : (theme === "dark" ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(0,0,0,0.04)"),
+                                    }}
+                                />
+                                {/* Animated highlight ring that slides between active tabs */}
                                 {isActive && (
                                     <motion.div
-                                        layoutId="mobileActiveTab"
-                                        className="absolute inset-1"
+                                        layoutId="mobileActiveRing"
+                                        className="absolute"
                                         style={{
-                                            borderRadius: 16,
-                                            background: theme === "dark"
-                                                ? "rgba(0,113,227,0.15)"
-                                                : "rgba(0,113,227,0.08)",
+                                            width: 48,
+                                            height: 48,
+                                            borderRadius: 18,
+                                            border: theme === "dark" ? "2px solid rgba(0,113,227,0.5)" : "2px solid rgba(0,113,227,0.25)",
                                         }}
                                         transition={{
                                             type: "spring",
-                                            stiffness: 380,
-                                            damping: 32,
+                                            stiffness: 400,
+                                            damping: 30,
                                         }}
                                     />
                                 )}
                                 <Icon className="w-[22px] h-[22px] relative z-10" strokeWidth={isActive ? 2 : 1.5} />
-                                <span className="text-[10px] mt-0.5 font-medium relative z-10">{item.name}</span>
+                                <span className="text-[9px] mt-0.5 font-medium relative z-10">{item.name}</span>
                             </button>
                         );
                     })}
