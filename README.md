@@ -77,4 +77,3 @@ cd LegalAI
 - `backend/`: FastAPI backend application.
 - `frontend/`: Next.js frontend application.
 - `run_backend.py`: Script to launch the backend server.
-abc
