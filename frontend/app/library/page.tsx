@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FileText, Search, Download, Trash2 } from "lucide-react";
+import { FileText, Search, Download, Trash2, Loader2 } from "lucide-react";
 import api from "@/lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 import { staggerContainer, staggerItem, fadeInUp, scaleIn, backdropFade } from "@/lib/motion";
@@ -159,12 +159,15 @@ export default function LibraryPage() {
                                     <button
                                         onClick={() => handleDelete(deleteConfirm)}
                                         disabled={deletingId === deleteConfirm.id}
-                                        className="px-4 py-2 text-[13px] font-medium text-white transition-colors duration-150 disabled:opacity-60"
+                                        className="px-4 py-2 text-[13px] font-medium text-white flex items-center gap-2 transition-colors duration-150 disabled:opacity-70"
                                         style={{
                                             background: "var(--destructive)",
                                             borderRadius: "var(--radius-md)",
                                         }}
                                     >
+                                        {deletingId === deleteConfirm.id && (
+                                            <Loader2 size={13} className="animate-spin" />
+                                        )}
                                         {deletingId === deleteConfirm.id ? "Deleting\u2026" : "Delete"}
                                     </button>
                                 </div>

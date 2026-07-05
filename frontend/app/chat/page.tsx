@@ -35,6 +35,8 @@ export default function ChatPage() {
     const [pendingFile, setPendingFile] = useState<File | null>(null);
     const [mobileSessionsOpen, setMobileSessionsOpen] = useState(false);
     const [confirmDeleteSessionId, setConfirmDeleteSessionId] = useState<number | null>(null);
+    const [deletingSession, setDeletingSession] = useState(false);
+    const [schedulingIndex, setSchedulingIndex] = useState<number | null>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -167,12 +169,13 @@ export default function ChatPage() {
         if (file) setPendingFile(file);
     };
 
-    const handleQuickSchedule = async (eventData: any) => {
+    const handleQuickSchedule = async (eventData: any, idx: number) => {
         if (!isLoggedIn) {
             toast.error("Please login to add events to your calendar");
             router.push("/auth/login?returnTo=/chat");
             return;
         }
+        setSchedulingIndex(idx);
         try {
             const [year, month, day] = (eventData.date as string).split('-').map(Number);
             const timeParts = (eventData.time || "10:00").split(':').map(Number);
@@ -187,6 +190,8 @@ export default function ChatPage() {
             toast.success("Event added to Schedule");
         } catch (error) {
             toast.error("Failed to schedule event");
+        } finally {
+            setSchedulingIndex(null);
         }
     };
 
@@ -197,6 +202,7 @@ export default function ChatPage() {
 
     const confirmDeleteSession = async () => {
         if (confirmDeleteSessionId === null) return;
+        setDeletingSession(true);
         try {
             await api.delete(`/chat/sessions/${confirmDeleteSessionId}`);
             setSessions(prev => prev.filter(s => s.id !== confirmDeleteSessionId));
@@ -207,11 +213,12 @@ export default function ChatPage() {
         } catch (error) {
             toast.error("Failed to delete conversation");
         } finally {
+            setDeletingSession(false);
             setConfirmDeleteSessionId(null);
         }
     };
 
-    const renderMessageContent = (content: string) => {
+    const renderMessageContent = (content: string, idx: number) => {
         const jsonBlockRegex = /```json\s*(\{\s*"action":\s*"schedule"[\s\S]*?\})\s*```/;
         const match = content.match(jsonBlockRegex);
 
@@ -243,14 +250,21 @@ export default function ChatPage() {
                                 <div style={{ color: "var(--muted-foreground)" }}>{eventData.date} at {eventData.time}</div>
                             </div>
                             <button
-                                onClick={() => handleQuickSchedule(eventData)}
-                                className="w-full py-2 text-[13px] font-medium text-white transition-colors duration-200"
+                                onClick={() => handleQuickSchedule(eventData, idx)}
+                                disabled={schedulingIndex === idx}
+                                className="w-full py-2 text-[13px] font-medium text-white transition-colors duration-200 disabled:opacity-70 flex items-center justify-center gap-2"
                                 style={{
                                     background: "var(--accent)",
                                     borderRadius: 8,
                                 }}
                             >
-                                Add to Calendar
+                                {schedulingIndex === idx ? (
+                                    <>
+                                        <Loader2 size={14} className="animate-spin" /> Adding...
+                                    </>
+                                ) : (
+                                    "Add to Calendar"
+                                )}
                             </button>
                         </div>
                     )}
@@ -392,17 +406,24 @@ export default function ChatPage() {
                                 <div className="flex gap-2 justify-end">
                                     <button
                                         onClick={() => setConfirmDeleteSessionId(null)}
-                                        className="px-4 py-2 text-[13px] font-medium transition-colors duration-150"
+                                        disabled={deletingSession}
+                                        className="px-4 py-2 text-[13px] font-medium transition-colors duration-150 disabled:opacity-60"
                                         style={{ color: "var(--foreground)", background: "var(--muted)", borderRadius: 10 }}
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         onClick={confirmDeleteSession}
-                                        className="px-4 py-2 text-[13px] font-medium text-white flex items-center gap-2 transition-colors duration-150"
+                                        disabled={deletingSession}
+                                        className="px-4 py-2 text-[13px] font-medium text-white flex items-center gap-2 transition-colors duration-150 disabled:opacity-70"
                                         style={{ background: "var(--destructive)", borderRadius: 10 }}
                                     >
-                                        <Trash2 size={13} /> Delete
+                                        {deletingSession ? (
+                                            <Loader2 size={13} className="animate-spin" />
+                                        ) : (
+                                            <Trash2 size={13} />
+                                        )}
+                                        {deletingSession ? "Deleting..." : "Delete"}
                                     </button>
                                 </div>
                             </div>
@@ -541,7 +562,7 @@ export default function ChatPage() {
                                             <span className="truncate">Reference: {msg.document_name}</span>
                                         </div>
                                     )}
-                                    {renderMessageContent(msg.content)}
+                                    {renderMessageContent(msg.content, idx)}
                                 </div>
                             </div>
                         ))

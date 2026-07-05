@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { UploadCloud, FileText, Check, Languages, X } from "lucide-react";
+import { UploadCloud, FileText, Check, Languages, X, Loader2 } from "lucide-react";
 import api from "@/lib/api";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
@@ -173,7 +173,9 @@ export default function NewCasePage() {
                     }}
                 >
                     {uploading ? (
-                        "Uploading..."
+                        <>
+                            <Loader2 size={18} className="animate-spin" /> Uploading...
+                        </>
                     ) : (
                         <>
                             <Check size={18} strokeWidth={2} /> Process Case File
