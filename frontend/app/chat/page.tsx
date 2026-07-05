@@ -243,7 +243,7 @@ export default function ChatPage() {
                         >
                             <div className="flex items-center gap-2 mb-2 text-[13px] font-semibold" style={{ color: "var(--accent)" }}>
                                 <CalendarIcon size={15} strokeWidth={1.5} />
-                                <span>Suggested Event</span>
+                                <span>Event</span>
                             </div>
                             <div className="text-[13px] space-y-1 mb-3">
                                 <div className="font-medium" style={{ color: "var(--foreground)" }}>{eventData.title}</div>
