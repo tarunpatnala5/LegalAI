@@ -21,6 +21,221 @@ interface ScheduleEvent {
 
 type FilterType = 'all' | 'custom' | 'month';
 
+type EventFormData = {
+    case_name: string;
+    court_date: string;
+    time: string;
+    status: string;
+    notification_enabled: boolean;
+};
+
+/* ── Shared input styles for modals ────────────────────── */
+const inputStyle = {
+    background: "var(--muted)",
+    borderRadius: "var(--radius-md)",
+    border: "1px solid transparent",
+    color: "var(--foreground)",
+};
+const handleFocus = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
+    e.currentTarget.style.borderColor = "var(--accent)";
+    e.currentTarget.style.background = "var(--card)";
+};
+const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
+    e.currentTarget.style.borderColor = "transparent";
+    e.currentTarget.style.background = "var(--muted)";
+};
+
+/* ── Reusable Apple toggle ─────────────────────────────── */
+const AppleToggle = ({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) => (
+    <button
+        type="button"
+        onClick={() => onChange(!checked)}
+        className="relative w-[51px] h-[31px] rounded-full transition-colors duration-300 p-0.5"
+        style={{ background: checked ? "var(--accent)" : "var(--muted)" }}
+        role="switch"
+        aria-checked={checked}
+    >
+        <div
+            className="w-[27px] h-[27px] bg-white rounded-full transition-transform duration-300"
+            style={{
+                transform: checked ? "translateX(20px)" : "translateX(0px)",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+            }}
+        />
+    </button>
+);
+
+/* ── Reusable modal form ───────────────────────────────── 
+   NOTE: This (and AppleToggle) live at module scope, outside
+   SchedulePage, on purpose. A component defined *inside* another
+   component's function body gets a brand-new identity every time
+   the parent re-renders (e.g. on every keystroke), which makes
+   React unmount + remount it instead of just updating it — that
+   was replaying the modal's open animation on every change.
+   ───────────────────────────────────────────────────────── */
+const EventForm = ({
+    title,
+    form,
+    setForm,
+    onSubmit,
+    onClose,
+    submitLabel,
+    submitting,
+}: {
+    title: string;
+    form: EventFormData;
+    setForm: (f: EventFormData) => void;
+    onSubmit: () => void;
+    onClose: () => void;
+    submitLabel: string;
+    submitting: boolean;
+}) => (
+    <>
+        <motion.div
+            variants={backdropFade}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="fixed inset-0 z-50"
+            style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(8px)" }}
+            onClick={onClose}
+        />
+        <motion.div
+            variants={scaleIn}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            onClick={(e) => e.target === e.currentTarget && onClose()}
+        >
+            <div
+                className="w-full max-w-md p-7 max-h-[90vh] overflow-y-auto"
+                style={{
+                    background: "var(--card)",
+                    border: "1px solid var(--card-border)",
+                    borderRadius: "var(--radius-xl)",
+                    boxShadow: "var(--shadow-xl)",
+                }}
+            >
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="font-display text-[20px] font-semibold" style={{ color: "var(--foreground)" }}>
+                        {title}
+                    </h3>
+                    <button onClick={onClose} className="p-1 rounded-md" style={{ color: "var(--muted-foreground)" }}>
+                        <X size={18} strokeWidth={1.5} />
+                    </button>
+                </div>
+
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-[12px] font-medium mb-1.5" style={{ color: "var(--muted-foreground)" }}>Event Title</label>
+                        <input
+                            type="text"
+                            value={form.case_name}
+                            onChange={e => setForm({ ...form, case_name: e.target.value })}
+                            className="w-full px-4 py-3 text-[14px] outline-none transition-all duration-200"
+                            style={inputStyle}
+                            onFocus={handleFocus}
+                            onBlur={handleBlur}
+                            placeholder="e.g. Hearing vs State"
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <label className="block text-[12px] font-medium mb-1.5" style={{ color: "var(--muted-foreground)" }}>Date</label>
+                            <input
+                                type="date"
+                                value={form.court_date}
+                                onChange={e => setForm({ ...form, court_date: e.target.value })}
+                                className="w-full px-3 py-3 text-[14px] outline-none transition-all duration-200"
+                                style={inputStyle}
+                                onFocus={handleFocus}
+                                onBlur={handleBlur}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-[12px] font-medium mb-1.5" style={{ color: "var(--muted-foreground)" }}>Time</label>
+                            <input
+                                type="time"
+                                value={form.time}
+                                onChange={e => setForm({ ...form, time: e.target.value })}
+                                className="w-full px-3 py-3 text-[14px] outline-none transition-all duration-200"
+                                style={inputStyle}
+                                onFocus={handleFocus}
+                                onBlur={handleBlur}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 items-end">
+                        <div>
+                            <label className="block text-[12px] font-medium mb-1.5" style={{ color: "var(--muted-foreground)" }}>Status</label>
+                            <div className="relative">
+                                <select
+                                    value={form.status}
+                                    onChange={e => setForm({ ...form, status: e.target.value })}
+                                    className="w-full px-3 py-3 text-[14px] outline-none transition-all duration-200 appearance-none cursor-pointer pr-8"
+                                    style={inputStyle}
+                                    onFocus={handleFocus}
+                                    onBlur={handleBlur}
+                                >
+                                    <option value="Scheduled">Scheduled</option>
+                                    <option value="In Progress">In Progress</option>
+                                    <option value="Closed">Closed</option>
+                                </select>
+                                <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--muted-foreground)" }} />
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-between pb-1">
+                            <span className="text-[13px] font-medium" style={{ color: "var(--foreground)" }}>Notify Me</span>
+                            <AppleToggle
+                                checked={form.notification_enabled}
+                                onChange={(v) => setForm({ ...form, notification_enabled: v })}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex gap-3 mt-7">
+                    <button
+                        onClick={onClose}
+                        disabled={submitting}
+                        className="flex-1 py-3 text-[14px] font-medium transition-colors duration-150 disabled:opacity-60"
+                        style={{
+                            color: "var(--foreground)",
+                            background: "var(--muted)",
+                            borderRadius: "var(--radius-md)",
+                        }}
+                    >
+                        Cancel
+                    </button>
+                    <motion.button
+                        whileHover={{ scale: submitting ? 1 : 1.01 }}
+                        whileTap={{ scale: submitting ? 1 : 0.99 }}
+                        onClick={onSubmit}
+                        disabled={submitting}
+                        className="flex-1 py-3 text-[14px] font-semibold text-white transition-colors duration-200 disabled:opacity-70 flex items-center justify-center gap-2"
+                        style={{
+                            background: "var(--accent)",
+                            borderRadius: "var(--radius-md)",
+                        }}
+                    >
+                        {submitting ? (
+                            <>
+                                <Loader2 size={15} className="animate-spin" />
+                                {submitLabel === "Schedule Event" ? "Scheduling..." : "Saving..."}
+                            </>
+                        ) : (
+                            submitLabel
+                        )}
+                    </motion.button>
+                </div>
+            </div>
+        </motion.div>
+    </>
+);
+
 export default function SchedulePage() {
     const router = useRouter();
     const { isLoggedIn } = useAuth();
@@ -341,205 +556,6 @@ export default function SchedulePage() {
         });
     };
 
-    /* ── Shared input styles for modals ────────────────────── */
-    const inputStyle = {
-        background: "var(--muted)",
-        borderRadius: "var(--radius-md)",
-        border: "1px solid transparent",
-        color: "var(--foreground)",
-    };
-    const handleFocus = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
-        e.currentTarget.style.borderColor = "var(--accent)";
-        e.currentTarget.style.background = "var(--card)";
-    };
-    const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
-        e.currentTarget.style.borderColor = "transparent";
-        e.currentTarget.style.background = "var(--muted)";
-    };
-
-    /* ── Reusable Apple toggle ─────────────────────────────── */
-    const AppleToggle = ({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) => (
-        <button
-            type="button"
-            onClick={() => onChange(!checked)}
-            className="relative w-[51px] h-[31px] rounded-full transition-colors duration-300 p-0.5"
-            style={{ background: checked ? "var(--accent)" : "var(--muted)" }}
-            role="switch"
-            aria-checked={checked}
-        >
-            <div
-                className="w-[27px] h-[27px] bg-white rounded-full transition-transform duration-300"
-                style={{
-                    transform: checked ? "translateX(20px)" : "translateX(0px)",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
-                }}
-            />
-        </button>
-    );
-
-    /* ── Reusable modal form ───────────────────────────────── */
-    const EventForm = ({
-        title,
-        form,
-        setForm,
-        onSubmit,
-        onClose,
-        submitLabel,
-        submitting,
-    }: {
-        title: string;
-        form: typeof newEvent;
-        setForm: (f: typeof newEvent) => void;
-        onSubmit: () => void;
-        onClose: () => void;
-        submitLabel: string;
-        submitting: boolean;
-    }) => (
-        <>
-            <motion.div
-                variants={backdropFade}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                className="fixed inset-0 z-50"
-                style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(8px)" }}
-                onClick={onClose}
-            />
-            <motion.div
-                variants={scaleIn}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                className="fixed inset-0 z-50 flex items-center justify-center p-4"
-                onClick={(e) => e.target === e.currentTarget && onClose()}
-            >
-                <div
-                    className="w-full max-w-md p-7 max-h-[90vh] overflow-y-auto"
-                    style={{
-                        background: "var(--card)",
-                        border: "1px solid var(--card-border)",
-                        borderRadius: "var(--radius-xl)",
-                        boxShadow: "var(--shadow-xl)",
-                    }}
-                >
-                    <div className="flex justify-between items-center mb-6">
-                        <h3 className="font-display text-[20px] font-semibold" style={{ color: "var(--foreground)" }}>
-                            {title}
-                        </h3>
-                        <button onClick={onClose} className="p-1 rounded-md" style={{ color: "var(--muted-foreground)" }}>
-                            <X size={18} strokeWidth={1.5} />
-                        </button>
-                    </div>
-
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-[12px] font-medium mb-1.5" style={{ color: "var(--muted-foreground)" }}>Event Title</label>
-                            <input
-                                type="text"
-                                value={form.case_name}
-                                onChange={e => setForm({ ...form, case_name: e.target.value })}
-                                className="w-full px-4 py-3 text-[14px] outline-none transition-all duration-200"
-                                style={inputStyle}
-                                onFocus={handleFocus}
-                                onBlur={handleBlur}
-                                placeholder="e.g. Hearing vs State"
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                            <div>
-                                <label className="block text-[12px] font-medium mb-1.5" style={{ color: "var(--muted-foreground)" }}>Date</label>
-                                <input
-                                    type="date"
-                                    value={form.court_date}
-                                    onChange={e => setForm({ ...form, court_date: e.target.value })}
-                                    className="w-full px-3 py-3 text-[14px] outline-none transition-all duration-200"
-                                    style={inputStyle}
-                                    onFocus={handleFocus}
-                                    onBlur={handleBlur}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-[12px] font-medium mb-1.5" style={{ color: "var(--muted-foreground)" }}>Time</label>
-                                <input
-                                    type="time"
-                                    value={form.time}
-                                    onChange={e => setForm({ ...form, time: e.target.value })}
-                                    className="w-full px-3 py-3 text-[14px] outline-none transition-all duration-200"
-                                    style={inputStyle}
-                                    onFocus={handleFocus}
-                                    onBlur={handleBlur}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3 items-end">
-                            <div>
-                                <label className="block text-[12px] font-medium mb-1.5" style={{ color: "var(--muted-foreground)" }}>Status</label>
-                                <div className="relative">
-                                    <select
-                                        value={form.status}
-                                        onChange={e => setForm({ ...form, status: e.target.value })}
-                                        className="w-full px-3 py-3 text-[14px] outline-none transition-all duration-200 appearance-none cursor-pointer pr-8"
-                                        style={inputStyle}
-                                        onFocus={handleFocus}
-                                        onBlur={handleBlur}
-                                    >
-                                        <option value="Scheduled">Scheduled</option>
-                                        <option value="In Progress">In Progress</option>
-                                        <option value="Closed">Closed</option>
-                                    </select>
-                                    <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--muted-foreground)" }} />
-                                </div>
-                            </div>
-                            <div className="flex items-center justify-between pb-1">
-                                <span className="text-[13px] font-medium" style={{ color: "var(--foreground)" }}>Notify Me</span>
-                                <AppleToggle
-                                    checked={form.notification_enabled}
-                                    onChange={(v) => setForm({ ...form, notification_enabled: v })}
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="flex gap-3 mt-7">
-                        <button
-                            onClick={onClose}
-                            disabled={submitting}
-                            className="flex-1 py-3 text-[14px] font-medium transition-colors duration-150 disabled:opacity-60"
-                            style={{
-                                color: "var(--foreground)",
-                                background: "var(--muted)",
-                                borderRadius: "var(--radius-md)",
-                            }}
-                        >
-                            Cancel
-                        </button>
-                        <motion.button
-                            whileHover={{ scale: submitting ? 1 : 1.01 }}
-                            whileTap={{ scale: submitting ? 1 : 0.99 }}
-                            onClick={onSubmit}
-                            disabled={submitting}
-                            className="flex-1 py-3 text-[14px] font-semibold text-white transition-colors duration-200 disabled:opacity-70 flex items-center justify-center gap-2"
-                            style={{
-                                background: "var(--accent)",
-                                borderRadius: "var(--radius-md)",
-                            }}
-                        >
-                            {submitting ? (
-                                <>
-                                    <Loader2 size={15} className="animate-spin" />
-                                    {submitLabel === "Schedule Event" ? "Scheduling..." : "Saving..."}
-                                </>
-                            ) : (
-                                submitLabel
-                            )}
-                        </motion.button>
-                    </div>
-                </div>
-            </motion.div>
-        </>
-    );
 
     if (loading) {
         return (
