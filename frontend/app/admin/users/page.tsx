@@ -154,6 +154,7 @@ export default function AdminUsersPage() {
                         <Users style={{ color: "var(--accent)" }} size={26} strokeWidth={1.5} />
                         User Management
                     </h1>
+                    <p className="text-[14px] mt-1" style={{ color: "var(--muted-foreground)" }}>Admin panel \u2014 {users.length} registered users</p>
                 </div>
                 <span
                     className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold"

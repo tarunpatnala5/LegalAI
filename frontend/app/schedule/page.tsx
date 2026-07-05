@@ -31,6 +31,8 @@ export default function SchedulePage() {
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingEvent, setEditingEvent] = useState<ScheduleEvent | null>(null);
     const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+    const [submitting, setSubmitting] = useState(false);
+    const [deletingId, setDeletingId] = useState<number | null>(null);
     const [editForm, setEditForm] = useState({
         case_name: "",
         court_date: "",
@@ -145,6 +147,7 @@ export default function SchedulePage() {
             return;
         }
 
+        setSubmitting(true);
         try {
             const [year, month, day] = newEvent.court_date.split('-').map(Number);
             const [hours, minutes] = newEvent.time.split(':').map(Number);
@@ -171,6 +174,8 @@ export default function SchedulePage() {
             } else {
                 toast.error("Failed to add event");
             }
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -197,6 +202,7 @@ export default function SchedulePage() {
             toast.error("Please fill all fields");
             return;
         }
+        setSubmitting(true);
         try {
             const [year, month, day] = editForm.court_date.split('-').map(Number);
             const [hours, minutes] = editForm.time.split(':').map(Number);
@@ -220,10 +226,13 @@ export default function SchedulePage() {
             } else {
                 toast.error("Failed to update event");
             }
+        } finally {
+            setSubmitting(false);
         }
     };
 
     const handleDeleteEvent = async (id: number) => {
+        setDeletingId(id);
         try {
             await api.delete(`/schedule/${id}`);
             toast.success("Event deleted");
@@ -231,6 +240,7 @@ export default function SchedulePage() {
         } catch (error) {
             toast.error("Failed to delete event");
         } finally {
+            setDeletingId(null);
             setConfirmDeleteId(null);
         }
     };
@@ -375,6 +385,7 @@ export default function SchedulePage() {
         onSubmit,
         onClose,
         submitLabel,
+        submitting,
     }: {
         title: string;
         form: typeof newEvent;
@@ -382,6 +393,7 @@ export default function SchedulePage() {
         onSubmit: () => void;
         onClose: () => void;
         submitLabel: string;
+        submitting: boolean;
     }) => (
         <>
             <motion.div
@@ -493,7 +505,8 @@ export default function SchedulePage() {
                     <div className="flex gap-3 mt-7">
                         <button
                             onClick={onClose}
-                            className="flex-1 py-3 text-[14px] font-medium transition-colors duration-150"
+                            disabled={submitting}
+                            className="flex-1 py-3 text-[14px] font-medium transition-colors duration-150 disabled:opacity-60"
                             style={{
                                 color: "var(--foreground)",
                                 background: "var(--muted)",
@@ -503,16 +516,24 @@ export default function SchedulePage() {
                             Cancel
                         </button>
                         <motion.button
-                            whileHover={{ scale: 1.01 }}
-                            whileTap={{ scale: 0.99 }}
+                            whileHover={{ scale: submitting ? 1 : 1.01 }}
+                            whileTap={{ scale: submitting ? 1 : 0.99 }}
                             onClick={onSubmit}
-                            className="flex-1 py-3 text-[14px] font-semibold text-white transition-colors duration-200"
+                            disabled={submitting}
+                            className="flex-1 py-3 text-[14px] font-semibold text-white transition-colors duration-200 disabled:opacity-70 flex items-center justify-center gap-2"
                             style={{
                                 background: "var(--accent)",
                                 borderRadius: "var(--radius-md)",
                             }}
                         >
-                            {submitLabel}
+                            {submitting ? (
+                                <>
+                                    <Loader2 size={15} className="animate-spin" />
+                                    {submitLabel === "Schedule Event" ? "Scheduling..." : "Saving..."}
+                                </>
+                            ) : (
+                                submitLabel
+                            )}
                         </motion.button>
                     </div>
                 </div>
@@ -897,17 +918,24 @@ export default function SchedulePage() {
                                 <div className="flex gap-2 justify-end">
                                     <button
                                         onClick={() => setConfirmDeleteId(null)}
-                                        className="px-4 py-2 text-[13px] font-medium transition-colors duration-150"
+                                        disabled={deletingId === confirmDeleteId}
+                                        className="px-4 py-2 text-[13px] font-medium transition-colors duration-150 disabled:opacity-60"
                                         style={{ color: "var(--foreground)", background: "var(--muted)", borderRadius: "var(--radius-md)" }}
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         onClick={() => handleDeleteEvent(confirmDeleteId)}
-                                        className="px-4 py-2 text-[13px] font-medium text-white flex items-center gap-2 transition-colors duration-150"
+                                        disabled={deletingId === confirmDeleteId}
+                                        className="px-4 py-2 text-[13px] font-medium text-white flex items-center gap-2 transition-colors duration-150 disabled:opacity-70"
                                         style={{ background: "var(--destructive)", borderRadius: "var(--radius-md)" }}
                                     >
-                                        <Trash2 size={13} /> Delete
+                                        {deletingId === confirmDeleteId ? (
+                                            <Loader2 size={13} className="animate-spin" />
+                                        ) : (
+                                            <Trash2 size={13} />
+                                        )}
+                                        {deletingId === confirmDeleteId ? "Deleting..." : "Delete"}
                                     </button>
                                 </div>
                             </div>
@@ -926,6 +954,7 @@ export default function SchedulePage() {
                         onSubmit={handleAddEvent}
                         onClose={() => setShowModal(false)}
                         submitLabel="Schedule Event"
+                        submitting={submitting}
                     />
                 )}
             </AnimatePresence>
@@ -940,6 +969,7 @@ export default function SchedulePage() {
                         onSubmit={handleUpdateEvent}
                         onClose={() => { setShowEditModal(false); setEditingEvent(null); }}
                         submitLabel="Save Changes"
+                        submitting={submitting}
                     />
                 )}
             </AnimatePresence>

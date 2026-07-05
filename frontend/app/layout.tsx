@@ -58,6 +58,9 @@ export default function RootLayout({
             <AppLayout>{children}</AppLayout>
             <Toaster
               position="top-center"
+              containerStyle={{
+                top: "var(--toast-top-offset)",
+              }}
               toastOptions={{
                 duration: 3000,
                 style: {
