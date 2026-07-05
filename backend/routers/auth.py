@@ -249,14 +249,42 @@ def get_all_users(
         ))
     return result
 
+def _purge_user_data(user_id: int, db: Session):
+    """Delete all rows owned by a user before the user row itself is removed.
+
+    The User model has no ORM-level cascade relationships configured, and in
+    production (Postgres) foreign key constraints are enforced, so deleting a
+    user that still has chat sessions, cases, or schedules raises an
+    IntegrityError and the delete silently/loudly fails. Clean up children
+    first so both the self-delete and admin-delete endpoints work reliably.
+    """
+    from models.chat import ChatSession, ChatMessage
+    from models.case import CaseDocument
+    from models.schedule import Schedule
+
+    session_ids = [
+        row.id for row in db.query(ChatSession.id).filter(ChatSession.user_id == user_id).all()
+    ]
+    if session_ids:
+        db.query(ChatMessage).filter(ChatMessage.session_id.in_(session_ids)).delete(synchronize_session=False)
+        db.query(ChatSession).filter(ChatSession.id.in_(session_ids)).delete(synchronize_session=False)
+
+    db.query(CaseDocument).filter(CaseDocument.user_id == user_id).delete(synchronize_session=False)
+    db.query(Schedule).filter(Schedule.user_id == user_id).delete(synchronize_session=False)
+
 @router.delete("/me")
 def delete_own_account(
     current_user: user_model.User = Depends(require_user),
     db: Session = Depends(get_db),
 ):
     """Allow a logged-in user to permanently delete their own account."""
-    db.delete(current_user)
-    db.commit()
+    try:
+        _purge_user_data(current_user.id, db)
+        db.delete(current_user)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to delete account")
     return {"message": "Account deleted successfully"}
 
 @router.delete("/users/{user_id}")
@@ -270,7 +298,12 @@ def delete_user(
     target = db.query(user_model.User).filter(user_model.User.id == user_id).first()
     if not target:
         raise HTTPException(status_code=404, detail="User not found")
-    db.delete(target)
-    db.commit()
+    try:
+        _purge_user_data(user_id, db)
+        db.delete(target)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to delete user")
     return {"message": "User deleted successfully"}
 

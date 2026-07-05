@@ -7,8 +7,8 @@ import { useTheme } from "@/lib/theme-context";
 import { useAuth } from "@/lib/auth-context";
 import api from "@/lib/api";
 import toast from "react-hot-toast";
-import { motion } from "framer-motion";
-import { fadeInUp } from "@/lib/motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { fadeInUp, scaleIn, backdropFade } from "@/lib/motion";
 
 export default function SettingsPage() {
     const router = useRouter();
@@ -18,7 +18,6 @@ export default function SettingsPage() {
     const [editOpen, setEditOpen] = useState(false);
     const [saving, setSaving] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    const [deleteInput, setDeleteInput] = useState("");
     const [deletingAccount, setDeletingAccount] = useState(false);
 
     const [form, setForm] = useState({
@@ -35,14 +34,11 @@ export default function SettingsPage() {
     };
 
     const handleDeleteAccount = async () => {
-        if (deleteInput !== "DELETE") {
-            toast.error("Type DELETE to confirm");
-            return;
-        }
         setDeletingAccount(true);
         try {
             await api.delete("/auth/me");
             toast.success("Account deleted");
+            setShowDeleteConfirm(false);
             logout();
             router.push("/auth/login");
         } catch (error: any) {
@@ -339,7 +335,7 @@ export default function SettingsPage() {
                                     </div>
                                 </div>
                                 <button
-                                    onClick={() => { setShowDeleteConfirm(!showDeleteConfirm); setDeleteInput(""); }}
+                                    onClick={() => setShowDeleteConfirm(true)}
                                     className="px-3 py-1.5 text-[13px] font-medium transition-colors duration-150"
                                     style={{
                                         color: "var(--destructive)",
@@ -347,62 +343,81 @@ export default function SettingsPage() {
                                         borderRadius: "var(--radius-md)",
                                     }}
                                 >
-                                    {showDeleteConfirm ? "Cancel" : "Delete"}
+                                    Delete
                                 </button>
                             </div>
-
-                            {showDeleteConfirm && (
-                                <div className="mt-5 pt-5 space-y-4" style={{ borderTop: "1px solid var(--separator)" }}>
-                                    <div
-                                        className="flex items-start gap-3 p-4"
-                                        style={{
-                                            background: "rgba(255,59,48,0.04)",
-                                            border: "1px solid rgba(255,59,48,0.1)",
-                                            borderRadius: "var(--radius-lg)",
-                                        }}
-                                    >
-                                        <AlertTriangle size={16} strokeWidth={1.5} className="mt-0.5 shrink-0" style={{ color: "var(--destructive)" }} />
-                                        <p className="text-[13px] leading-relaxed" style={{ color: "var(--destructive)" }}>
-                                            This will <strong>permanently delete</strong> your account, all your cases, chat history, and schedules. This action <strong>cannot be undone</strong>.
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <label className="text-[12px] font-medium mb-1.5 block" style={{ color: "var(--muted-foreground)" }}>
-                                            Type <span className="font-mono font-semibold" style={{ color: "var(--destructive)" }}>DELETE</span> to confirm
-                                        </label>
-                                        <input
-                                            value={deleteInput}
-                                            onChange={e => setDeleteInput(e.target.value)}
-                                            placeholder="DELETE"
-                                            className="w-full px-3 py-2.5 text-[14px] font-mono outline-none transition-all duration-200"
-                                            style={{
-                                                background: "var(--muted)",
-                                                border: "1px solid rgba(255,59,48,0.15)",
-                                                borderRadius: "var(--radius-md)",
-                                                color: "var(--foreground)",
-                                            }}
-                                        />
-                                    </div>
-                                    <div className="flex justify-end">
-                                        <button
-                                            onClick={handleDeleteAccount}
-                                            disabled={deletingAccount || deleteInput !== "DELETE"}
-                                            className="flex items-center gap-2 px-4 py-2.5 text-[13px] font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
-                                            style={{
-                                                background: "var(--destructive)",
-                                                borderRadius: "var(--radius-md)",
-                                            }}
-                                        >
-                                            {deletingAccount ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
-                                            Permanently Delete Account
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
                         </div>
                     </>
                 )}
             </div>
+
+            {/* Delete Account Confirmation Modal */}
+            <AnimatePresence>
+                {showDeleteConfirm && (
+                    <>
+                        <motion.div
+                            variants={backdropFade}
+                            initial="hidden"
+                            animate="visible"
+                            exit="exit"
+                            className="fixed inset-0 z-50"
+                            style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(8px)" }}
+                            onClick={() => !deletingAccount && setShowDeleteConfirm(false)}
+                        />
+                        <motion.div
+                            variants={scaleIn}
+                            initial="hidden"
+                            animate="visible"
+                            exit="exit"
+                            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                            onClick={(e) => e.target === e.currentTarget && !deletingAccount && setShowDeleteConfirm(false)}
+                        >
+                            <div
+                                className="w-full max-w-sm p-6"
+                                style={{
+                                    background: "var(--card)",
+                                    border: "1px solid var(--card-border)",
+                                    borderRadius: "var(--radius-xl)",
+                                    boxShadow: "var(--shadow-xl)",
+                                }}
+                            >
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "rgba(255,59,48,0.08)" }}>
+                                        <AlertTriangle size={18} style={{ color: "var(--destructive)" }} />
+                                    </div>
+                                    <h2 className="text-[17px] font-semibold" style={{ color: "var(--foreground)" }}>Delete Account?</h2>
+                                </div>
+                                <p className="text-[14px] mb-6" style={{ color: "var(--muted-foreground)" }}>
+                                    This will <strong style={{ color: "var(--foreground)" }}>permanently delete</strong> your account, all your cases, chat history, and schedules. This action <strong style={{ color: "var(--foreground)" }}>cannot be undone</strong>.
+                                </p>
+                                <div className="flex gap-2 justify-end">
+                                    <button
+                                        onClick={() => setShowDeleteConfirm(false)}
+                                        disabled={deletingAccount}
+                                        className="px-4 py-2 text-[13px] font-medium transition-colors duration-150 disabled:opacity-60"
+                                        style={{ color: "var(--foreground)", background: "var(--muted)", borderRadius: "var(--radius-md)" }}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleDeleteAccount}
+                                        disabled={deletingAccount}
+                                        className="px-4 py-2 text-[13px] font-medium text-white flex items-center gap-2 transition-colors duration-150 disabled:opacity-70"
+                                        style={{ background: "var(--destructive)", borderRadius: "var(--radius-md)" }}
+                                    >
+                                        {deletingAccount ? (
+                                            <Loader2 size={13} className="animate-spin" />
+                                        ) : (
+                                            <Trash2 size={13} />
+                                        )}
+                                        {deletingAccount ? "Deleting..." : "Permanently Delete Account"}
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
         </motion.div>
     );
 }
